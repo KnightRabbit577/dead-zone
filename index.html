@@ -91,9 +91,9 @@ const mi=(a,b)=>mr(a,b)|0,mpick=a=>a[mi(0,a.length)];
 /* ========== Réglages d'équilibrage (tout est centralisé ici) ========== */
 const CFG={
  muzzle:18,                 // départ des balles : distance au centre du joueur (avant : 24)
- dodge:{dur:.16,dist:150,cd:1.1,inv:.12,ghost:.03},   // durée, distance, récupération, invulnérabilité (s), cadence des silhouettes
+ dodge:{dur:.16,dist:150,cd:1.5,inv:.12,ghost:.03},   // durée, distance, récupération, invulnérabilité (s), cadence des silhouettes
  dn:{grow:.15,hold:.85,fade:.3,rise:26,max:60,merge:.06,smin:13,smax:26}, // dégâts flottants (s, px)
- ev:{chance:.5,            // probabilité qu'une vague déclenche un événement
+ ev:{chance:.4,            // probabilité qu'une vague déclenche un événement
   firstWave:2,             // aucun événement avant cette vague
   minGap:25,               // délai minimal (s) entre la fin d'un événement et le début du suivant
   maxActive:2,             // événements simultanés max
