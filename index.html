@@ -32,6 +32,10 @@ label{display:flex;justify-content:space-between;align-items:center;margin:12px 
 #genp{top:40px;left:50%;transform:translateX(-50%);display:none;text-align:center;min-width:250px;padding:5px 12px}
 #genp .bar{width:100%;margin:3px 0 1px}
 #genf{background:linear-gradient(#fd5,#c80)}
+#team{top:104px;left:10px;display:none;font-size:13px;line-height:1.5;padding:5px 10px;min-width:130px}
+#mpl div{padding:4px 8px;margin:3px 0;background:#121a10;border-radius:6px;text-align:left}
+.mpin{padding:8px 10px;background:#0f150e;color:#eee;border:1px solid #5a8;border-radius:6px;font-size:15px}
+button.on2{background:#3f6a35;border-color:#9f9}
 #banner{position:fixed;left:0;right:0;top:32%;text-align:center;pointer-events:none;z-index:6;opacity:0;font-size:64px;font-weight:900;color:#f54;text-shadow:0 0 25px #000,0 0 10px #a00;letter-spacing:6px}
 #banner small{display:block;font-size:22px;color:#fda;letter-spacing:2px}
 #evb{position:fixed;left:0;right:0;top:19%;text-align:center;pointer-events:none;z-index:6;opacity:0;font-size:34px;font-weight:900;color:#9df;text-shadow:0 0 18px #000,0 0 8px #036;letter-spacing:3px}
@@ -47,6 +51,7 @@ label{display:flex;justify-content:space-between;align-items:center;margin:12px 
  <div id="msg"></div>
  <div class="pn" id="genp">⚡ Générateur : <span id="gent"></span><div class="bar"><i id="genf"></i></div></div>
  <div id="note"></div>
+ <div class="pn" id="team"></div>
  <div class="pn c" style="bottom:12px;left:50%;transform:translateX(-50%);min-width:300px"><div id="sl"></div>🔫 <span id="wn"></span> &nbsp; 🔢 <span id="am"></span><br><span style="font-size:14px">💊 Soins : <span id="md"></span> (E) &nbsp; 🔧 Pièces : <span id="pt"></span></span>
   <div style="font-size:13px;margin-top:5px">💨 <span id="ddt"></span> <span id="bfx" style="color:#fd8"></span></div><div class="bar" style="width:100%;height:9px;margin:3px 0 0"><i id="ddf" style="background:linear-gradient(#8df,#39c)"></i></div></div>
 </div>
@@ -54,6 +59,7 @@ label{display:flex;justify-content:space-between;align-items:center;margin:12px 
 <div class="scr on" id="menu"><div class="box"><h1>DEAD ZONE</h1><p class="c" style="margin-bottom:14px">Survivez aux hordes de zombies.</p>
  <button onclick="play('survie')">▶ Survie classique<small>Survivez le plus longtemps possible</small></button>
  <button onclick="play('defense')">⚡ Défense du générateur<small id="defd"></small></button>
+ <button onclick="openMP()">👥 Multijoueur coop (en ligne)<small>Jusqu'à 4 joueurs — code de salle, sans serveur</small></button>
  <button onclick="show('tuto')">📖 Tutoriel</button><button onclick="show('opts')">⚙️ Options</button></div></div>
 <div class="scr" id="tuto"><div class="box"><h2>Tutoriel</h2><ul style="padding-left:18px">
  <li><b>ZQSD / WASD</b> (ou flèches) : se déplacer</li><li><b>Souris</b> : viser — <b>clic gauche</b> maintenu : tirer</li>
@@ -64,18 +70,35 @@ label{display:flex;justify-content:space-between;align-items:center;margin:12px 
  <li>Chaque niveau : choisissez 1 amélioration parmi 3.</li>
  <li><b>Deux cartes</b> (campagne abandonnée ou centre-ville), tirée au sort à chaque partie.</li>
  <li><b>Événements</b> (aléatoires) : 🌫️ brouillard, 📦 ravitaillement (récupérez la caisse en vous en approchant), ⚡ panne électrique.</li>
+ <li><b>Multijoueur coop</b> (1 à 4 joueurs, en ligne) : l'un crée une salle et partage le code (ou le lien), les autres rejoignent. Les zombies sont plus nombreux avec plus de joueurs. Un joueur à terre revient à la fin de la vague. Dans ce mode, la boutique et la pause ne figent pas la partie.</li>
  <li><b>Défense du générateur</b> : les zombies attaquent le générateur ⚡. Protégez-le, réparez-le entre les vagues (boutique) et survivez jusqu'à la dernière vague. S'il est détruit, c'est perdu.</li></ul><button onclick="show('menu')">Retour</button></div></div>
 <div class="scr" id="opts"><div class="box"><h2>Options</h2>
  <label>🔊 Volume <input type="range" id="vol" min="0" max="100" value="50" oninput="opt.vol=this.value/100;initAudio();tone(440,.1,'sine',.3)"></label>
  <label>📳 Tremblement d'écran <input type="checkbox" checked onchange="opt.shake=this.checked"></label>
  <label>🩸 Sang et taches <input type="checkbox" checked onchange="opt.blood=this.checked"></label>
  <button onclick="show('menu')">Retour</button></div></div>
-<div class="scr" id="pause"><div class="box"><h2>⏸ Pause</h2><button onclick="setMode('play')">Reprendre</button><button onclick="reset();setMode('menu')">Quitter vers le menu</button></div></div>
+<div class="scr" id="mp"><div class="box"><h2>👥 Multijoueur coop</h2>
+ <label style="margin:6px 0">Pseudo <input id="mpname" class="mpin" maxlength="12" style="width:58%" placeholder="Joueur"></label>
+ <div id="mp0">
+  <button onclick="mpCreate()">➕ Créer une salle<small>Vous êtes l'hôte : gardez cet onglet visible pendant la partie</small></button>
+  <div style="display:flex;gap:8px;align-items:center;margin:8px 0"><input id="mpcode" class="mpin" maxlength="5" placeholder="CODE" style="flex:1;text-transform:uppercase;letter-spacing:4px;text-align:center"><button style="width:auto;margin:0" onclick="mpJoin()">Rejoindre</button></div>
+ </div>
+ <div id="mp1" style="display:none">
+  <p class="c">Code de la salle : <b id="mpcodev" style="font-size:32px;letter-spacing:6px;color:#8f3"></b></p>
+  <button id="mplink" onclick="mpCopy()" style="padding:7px">🔗 Copier le lien d'invitation</button>
+  <div id="mpl"></div>
+  <div id="mpmode" style="display:flex;gap:8px"><button id="mpm0" onclick="mpMode('survie')">Survie classique</button><button id="mpm1" onclick="mpMode('defense')">Défense du générateur</button></div>
+  <button id="mpgo" onclick="mpStart()">▶ Lancer la partie</button>
+  <p id="mpwait" class="c" style="display:none;color:#9ab">En attente du lancement par l'hôte…</p>
+ </div>
+ <p id="mpmsg" class="c" style="min-height:22px;color:#fd8;margin-top:6px"></p>
+ <button onclick="mpBack()">Retour</button></div></div>
+<div class="scr" id="pause"><div class="box"><h2>⏸ Pause</h2><button onclick="setMode('play')">Reprendre</button><button onclick="toMenu()">Quitter vers le menu</button></div></div>
 <div class="scr" id="up"><div class="box"><h2>⭐ Niveau supérieur !</h2><p class="c" style="margin-bottom:8px">Choisissez une amélioration (1, 2 ou 3)</p><div id="ups"></div></div></div>
 <div class="scr" id="shop"><div class="box" id="shopbox"></div></div>
 <div class="scr" id="over"><div class="box"><h1 id="overT" style="color:#f44;text-shadow:0 0 18px #a00;font-size:42px">GAME OVER</h1>
  <p class="c" style="font-size:18px;margin:14px 0;line-height:2">⏱ Temps de survie : <b id="g1"></b><br>🧟 Zombies tués : <b id="g2"></b><br>🌊 Vague atteinte : <b id="g3"></b><br>⭐ Niveau : <b id="g4"></b><br><span style="font-size:15px;color:#9ab">🗺️ <span id="g5"></span></span></p>
- <button onclick="play()">🔁 Rejouer</button><button onclick="reset();setMode('menu')">Menu</button></div></div>
+ <p id="mpnote" class="c" style="display:none;color:#9ab;margin-bottom:6px"></p><button id="againBtn" onclick="again()">🔁 Rejouer</button><button onclick="toMenu()">Menu</button></div></div>
 
 <script>
 'use strict';
@@ -91,9 +114,9 @@ const mi=(a,b)=>mr(a,b)|0,mpick=a=>a[mi(0,a.length)];
 /* ========== Réglages d'équilibrage (tout est centralisé ici) ========== */
 const CFG={
  muzzle:18,                 // départ des balles : distance au centre du joueur (avant : 24)
- dodge:{dur:.16,dist:150,cd:1.5,inv:.12,ghost:.03},   // durée, distance, récupération, invulnérabilité (s), cadence des silhouettes
+ dodge:{dur:.16,dist:150,cd:1.1,inv:.12,ghost:.03},   // durée, distance, récupération, invulnérabilité (s), cadence des silhouettes
  dn:{grow:.15,hold:.85,fade:.3,rise:26,max:60,merge:.06,smin:13,smax:26}, // dégâts flottants (s, px)
- ev:{chance:.4,            // probabilité qu'une vague déclenche un événement
+ ev:{chance:.5,            // probabilité qu'une vague déclenche un événement
   firstWave:2,             // aucun événement avant cette vague
   minGap:25,               // délai minimal (s) entre la fin d'un événement et le début du suivant
   maxActive:2,             // événements simultanés max
@@ -104,7 +127,11 @@ const CFG={
   fogAlpha:.6,fogClear:150,// opacité max du voile / rayon dégagé autour du joueur (px)
   supply:{cash:60,cashWave:30,mags:2,heal:30,buffT:25,dmg:1.5,rate:1.4,spd:1.3,pickR:32,minDist:300,maxDist:1100}},
  gen:{hp:1000,w:84,h:56,dmgMul:.5,explMul:1.4,aggro:150,deaggro:260,winWave:12,countMul:1.1,
-  repairHp:200,repairCash:90,repairCashWave:10,repairParts:2,repairMax:2,warnEvery:5}
+  repairHp:200,repairCash:90,repairCashWave:10,repairParts:2,repairMax:2,warnEvery:5},
+ mp:{max:4,countPerPlayer:.6,hpPerPlayer:.35,capPerPlayer:.4,spawnMin:700,respawnHp:.5,respawnInv:2}, // coop : difficulté par joueur supplémentaire, réapparition à la fin de la vague
+ net:{ver:1,room:'deadzone-',view:1500,snapHz:15,inHz:30,cmdRetry:.15,timeout:8, // version du protocole, préfixe des salles, rayon de visibilité (px), fréquences d'envoi, délai de coupure (s)
+  peer:{},ice:[], // options PeerJS supplémentaires (serveur de signalisation perso) / serveurs TURN perso : [{urls:'turn:...',username:'..',credential:'..'}]
+  lib:['https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js','https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js']}
 };
 
 /* ========== Sons (WebAudio, sans fichier) ========== */
@@ -492,29 +519,41 @@ function drawCityMap(m){const g=m.canvas.getContext('2d'),D=m.deco,RW=200;
  for(const o of trees)drawObs(g,o)}
 
 /* ========== État du jeu ========== */
-let mode='menu',P,S,Z=[],B=[],PT=[],DR=[],CO=[],DC=[],EX=[],DNUM=[],AFI=[],EV,GEN=null,GF=null,GP=null;
+let mode='menu',P,ME,players=[],S,Z=[],B=[],PT=[],DR=[],CO=[],DC=[],EX=[],DNUM=[],AFI=[],EV,GEN=null,GF=null,GP=null,NZ=new Map(),NB=new Map(),NETID=0;
+// P = joueur « courant » (le joueur local, ou celui qu'on traite via as()) ; ME = joueur local ; players = tous les joueurs (index = id réseau)
 const G={mode:'survie',map:'rural',cur:'survie'}; // mode choisi, carte active, mode de la partie en cours
-const cam={x:0,y:0},M={x:0,y:0,d:0},K={},gh=new Int32Array(ZG*ZG),gn=new Int32Array(600);
-const xpNeed=()=>30+P.lvl*P.lvl*9;
-// reset(true) : nouvelle partie (mode de jeu appliqué, générateur créé) ; reset() : état neutre (retour au menu)
-function reset(start){
- activateMap(G.map); // la carte (tirée par play()) ne change plus jusqu'à la prochaine partie
- const def=!!start&&G.mode=='defense',sp=def?MAPD.pdef:MAPD.pspawn;G.cur=def?'defense':'survie';
- P={x:sp.x,y:sp.y,r:14,hp:100,mhp:100,spd:185,ang:0,dmgM:1,rateM:1,magM:1,relM:1,spdM:1,proj:0,regen:0,inv:0,fl:0,cd:0,rel:0,wi:0,
-  ws:WP.map((w,i)=>({have:i==0,mag:w.mag,res:0,lvl:0})),med:1,parts:0,cash:0,xp:0,lvl:1,step:0,
-  dod:{t:0,cd:0,dx:0,dy:0,inv:0,tr:0},bf:{dmg:0,rate:0,spd:0}};
- S={wave:0,prep:2.5,q:[],sp:0,cap:50,kills:0,t:0,pend:0,shake:0,df:0,rep:0,note:null,pf:null,pft:0};
- Z=[];B=[];PT=[];DR=[];CO=[];DC=[];EX=[];DNUM=[];AFI=[];M.d=0;GEN=null;GF=null;GP=null;evReset();
- if(def){const g=MAPD.gen;GEN={x:g.x,y:g.y,w:CFG.gen.w,h:CFG.gen.h,hp:CFG.gen.hp,mhp:CFG.gen.hp,hitT:0,warn:-99,snd:0,fx:0};buildFlow()}
+// Réseau : role 'solo' | 'host' | 'client' ; started = partie lancée (avant : salon)
+const NET={welcomed:false,role:'solo',started:false,peer:null,conn:null,code:'',cl:[],evq:[],eid:0,seq:0,now:0,acc:{snap:0,inp:0,cmd:0,ping:0},lobbyMode:'survie',myId:0,name:'',cmds:[],cid:0,ackE:0,lastSn:-1,lastRx:0,rtt:0,lobby:[],tmc:'',lastHit:0};
+const KI={n:0,f:1,t:2,e:3,b:4},KS=['n','f','t','e','b'],KD={m:0,a:1,h:2,p:3},KDS=['m','a','h','p'],PCOL=['#2a6ad0','#d0452a','#2aa84a','#c9a227'];
+const cam={x:0,y:0},M={x:0,y:0,d:0},K={},gh=new Int32Array(ZG*ZG),gn=new Int32Array(1200);
+const xpNeedP=p=>30+p.lvl*p.lvl*9,xpNeed=()=>xpNeedP(P),live=p=>!p.dead&&!p.gone;
+function as(p,fn){const o=P;P=p;try{return fn()}finally{P=o}}
+const simOverlay=()=>mode=='shop'||mode=='up'||mode=='pause',simOn=()=>mode=='play'||(NET.role!='solo'&&NET.started&&simOverlay()); // en coop, boutique/pause/amélioration ne figent pas la partie
+function mkPlayer(id,name,sp,off){return{id,name:name||'Joueur',col:PCOL[id%4],x:sp.x+(off?off[0]:0),y:sp.y+(off?off[1]:0),r:14,hp:100,mhp:100,spd:185,ang:0,dmgM:1,rateM:1,magM:1,relM:1,spdM:1,proj:0,regen:0,inv:0,fl:0,cd:0,rel:0,wi:0,
+ ws:WP.map((w,i)=>({have:i==0,mag:w.mag,res:0,lvl:0})),med:1,parts:0,cash:0,xp:0,lvl:1,step:0,
+ dod:{t:0,cd:0,dx:0,dy:0,inv:0,tr:0},bf:{dmg:0,rate:0,spd:0},dead:false,gone:false,pend:0,choosing:false,choice:null,pf:null,pft:0,rs:0,inp:null,lcd:0}}
+// reset(true) : nouvelle partie (mode appliqué, générateur créé) ; reset() : état neutre (retour au menu). plist/my : joueurs de la partie coop
+function reset(start,plist,my){
+ activateMap(G.map); // la carte (tirée par play()/l'hôte) ne change plus jusqu'à la prochaine partie
+ const def=!!start&&G.mode=='defense',sp=def?MAPD.pdef:MAPD.pspawn,OFF=[[0,0],[-38,0],[38,0],[0,-38]];G.cur=def?'defense':'survie';
+ players=(plist||[{name:''}]).map((q,i)=>mkPlayer(i,q.name,sp,plist?OFF[i%4]:null));ME=players[my||0];P=ME;
+ S={wave:0,prep:2.5,q:[],sp:0,cap:50,kills:0,t:0,shake:0,df:0,rep:0,note:null,left:0};
+ Z=[];B=[];PT=[];DR=[];CO=[];DC=[];EX=[];DNUM=[];AFI=[];M.d=0;GEN=null;GF=null;GP=null;NZ=new Map();NB=new Map();NETID=0;evReset();
+ if(def){const g=MAPD.gen;GEN={x:g.x,y:g.y,w:CFG.gen.w,h:CFG.gen.h,hp:CFG.gen.hp,mhp:CFG.gen.hp,hitT:0,warn:-99,snd:0,fx:0};if(NET.role!='client')buildFlow()}
  for(const id of['banner','evb']){const b=$(id);b.style.animation='none';b.style.opacity=0}$('note').textContent=''}
-function setMode(m){mode=m;$('hud').style.display=m=='menu'?'none':'block';
- const id={menu:'menu',pause:'pause',over:'over',shop:'shop',up:'up',play:''}[m];show(id)}
+function setMode(m){mode=m;$('hud').style.display=(m=='menu'||m=='mp')?'none':'block';
+ const id={menu:'menu',mp:'mp',pause:'pause',over:'over',shop:'shop',up:'up',play:''}[m];show(id)}
 function show(id){document.querySelectorAll('.scr').forEach(s=>s.classList.toggle('on',s.id===id))}
-// Jouer / Rejouer : nouvelle sélection aléatoire de la carte, une seule fois par partie. m : mode de jeu (sinon celui de la partie précédente)
-function play(m){initAudio();if(m)G.mode=m;G.map=Math.random()<.5?'rural':'city';reset(true);setMode('play')}
-function banner(t,s){const b=$('banner');b.innerHTML=t+(s?'<small>'+s+'</small>':'');b.style.animation='none';b.offsetWidth;b.style.animation='bn 2.6s forwards'}
-function ann(t,s){const b=$('evb');b.innerHTML=t+(s?'<small>'+s+'</small>':'');b.style.animation='none';b.offsetWidth;b.style.animation='bn 2.8s forwards'}
-function notify(t,d){if(S)S.note={s:t,t:d||3}}
+// Jouer / Rejouer (solo) : nouvelle sélection aléatoire de la carte, une seule fois par partie. m : mode de jeu (sinon celui de la partie précédente)
+function play(m){if(NET.role!='solo')return;initAudio();if(m)G.mode=m;G.map=Math.random()<.5?'rural':'city';reset(true);setMode('play')}
+// Événements réseau (hôte -> clients) : file numérotée, renvoyée jusqu'à accusé de réception. to : id du joueur visé (sinon tous)
+function emit(e,to){if(NET.role!='host'||!NET.started)return;e.i=++NET.eid;if(to!==undefined)e.to=to;NET.evq.push(e);if(NET.evq.length>500)NET.evq.shift()}
+function bannerL(t,s){const b=$('banner');b.innerHTML=t+(s?'<small>'+s+'</small>':'');b.style.animation='none';b.offsetWidth;b.style.animation='bn 2.6s forwards'}
+function annL(t,s){const b=$('evb');b.innerHTML=t+(s?'<small>'+s+'</small>':'');b.style.animation='none';b.offsetWidth;b.style.animation='bn 2.8s forwards'}
+function banner(t,s){bannerL(t,s);emit({e:'b',t,s})}
+function ann(t,s){annL(t,s);emit({e:'a',t,s})}
+function notify(t,d,to){if(!S)return;if(to===undefined||to===ME.id)S.note={s:t,t:d||3};if(to===undefined||to!==ME.id)emit({e:'n',s:t,d:d||3},to)}
+function sfxAll(n){SFX[n]();emit({e:'sf',n})}
 
 /* ========== Événements aléatoires (brouillard, ravitaillement, panne électrique) ========== */
 function evReset(){EV={act:[],next:null,last:null,lastEnd:-999,rolled:-1,fog:0,dark:0,crate:null}}
@@ -527,23 +566,23 @@ function rollEvents(){const C=CFG.ev;if(EV.rolled===S.wave)return;EV.rolled=S.wa
  let r=Math.random()*el.reduce((s,k)=>s+C.types[k].w,0),type=el[0];for(const k of el){r-=C.types[k].w;if(r<=0){type=k;break}}
  EV.next={type,at:S.t+C.delayMin+Math.random()*(C.delayMax-C.delayMin)}}
 function startEvent(type){const T=CFG.ev.types[type],a={type,t:0,dur:T.min+Math.random()*(T.max-T.min)};
- if(type=='supply'){const c=findCratePos();if(!c)return false;EV.crate={x:c.x,y:c.y};ann('📦 RAVITAILLEMENT','Une caisse est tombée — récupérez-la !');notify('📦 Caisse de ravitaillement : approchez-vous pour la récupérer',4);SFX.ev()}
- else if(type=='fog'){ann('🌫️ BROUILLARD','La visibilité diminue…');SFX.ev()}
- else{ann('⚡ PANNE ÉLECTRIQUE',"Les lumières s'éteignent…");SFX.off()}
+ if(type=='supply'){const c=findCratePos();if(!c)return false;EV.crate={x:c.x,y:c.y};ann('📦 RAVITAILLEMENT','Une caisse est tombée — récupérez-la !');notify('📦 Caisse de ravitaillement : approchez-vous pour la récupérer',4);sfxAll('ev')}
+ else if(type=='fog'){ann('🌫️ BROUILLARD','La visibilité diminue…');sfxAll('ev')}
+ else{ann('⚡ PANNE ÉLECTRIQUE',"Les lumières s'éteignent…");sfxAll('off')}
  EV.act.push(a);EV.last=type;return true}
 function evUpdate(dt){
  if(EV.next&&S.prep<=0&&S.t>=EV.next.at){const t=EV.next.type;EV.next=null;if(EV.act.length<CFG.ev.maxActive)startEvent(t)}
  for(let i=EV.act.length-1;i>=0;i--){const a=EV.act[i];a.t+=dt;let end=a.t>=a.dur;
-  if(a.type=='supply'&&EV.crate){if(Math.hypot(P.x-EV.crate.x,P.y-EV.crate.y)<CFG.ev.supply.pickR){pickCrate();end=true}else if(end)notify('📦 La caisse de ravitaillement a disparu…')}
+  if(a.type=='supply'&&EV.crate){const pk=players.find(p=>live(p)&&Math.hypot(p.x-EV.crate.x,p.y-EV.crate.y)<CFG.ev.supply.pickR);if(pk){pickCrate(pk);end=true}else if(end)notify('📦 La caisse de ravitaillement a disparu…')}
   if(end){EV.act.splice(i,1);EV.lastEnd=S.t;if(a.type=='supply')EV.crate=null;else notify(a.type=='fog'?'🌫️ Le brouillard se dissipe':'💡 Le courant est rétabli')}}
  EV.fog=evInt('fog');EV.dark=evInt('blackout')}
-function pickCrate(){const C=CFG.ev.supply,c=EV.crate;let r=Math.random()*10,k=r<3?'cash':r<6?'ammo':r<8?'med':'buff';
- if(k=='ammo'&&!P.ws.some((s,j)=>s.have&&j))k='cash';
- if(k=='cash'){const v=C.cash+S.wave*C.cashWave;P.cash+=v;notify('📦 Ravitaillement : +💰'+v,3.5)}
- else if(k=='ammo'){P.ws.forEach((s,j)=>{if(s.have&&j)s.res+=Math.ceil(WP[j].mag*C.mags)});notify('📦 Ravitaillement : munitions !',3.5)}
- else if(k=='med'){P.med++;P.hp=Math.min(P.mhp,P.hp+C.heal);notify('📦 Ravitaillement : trousse de soin +'+C.heal+' PV',3.5)}
- else{const t=['dmg','rate','spd'][Math.random()*3|0];P.bf[t]=C.buffT;notify('📦 Bonus '+{dmg:'dégâts ×'+C.dmg,rate:'cadence ×'+C.rate,spd:'vitesse ×'+C.spd}[t]+' ('+C.buffT+'s)',3.5)}
- SFX.pick();burst(c.x,c.y,18,'#4df',220,.6,4)}
+function pickCrate(p,c){p=p||P;c=c||EV.crate;const C=CFG.ev.supply;let r=Math.random()*10,k=r<3?'cash':r<6?'ammo':r<8?'med':'buff';
+ if(k=='ammo'&&!p.ws.some((s,j)=>s.have&&j))k='cash';const nt=(t)=>notify(t,3.5,p.id);
+ if(k=='cash'){const v=C.cash+S.wave*C.cashWave;p.cash+=v;nt('📦 Ravitaillement : +💰'+v)}
+ else if(k=='ammo'){p.ws.forEach((s,j)=>{if(s.have&&j)s.res+=Math.ceil(WP[j].mag*C.mags)});nt('📦 Ravitaillement : munitions !')}
+ else if(k=='med'){p.med++;p.hp=Math.min(p.mhp,p.hp+C.heal);nt('📦 Ravitaillement : trousse de soin +'+C.heal+' PV')}
+ else{const t=['dmg','rate','spd'][Math.random()*3|0];p.bf[t]=C.buffT;nt('📦 Bonus '+{dmg:'dégâts ×'+C.dmg,rate:'cadence ×'+C.rate,spd:'vitesse ×'+C.spd}[t]+' ('+C.buffT+'s)')}
+ if(p===ME)SFX.pick();emit({e:'pk',p:p.id});burst(c.x,c.y,18,'#4df',220,.6,4);emit({e:'bu',x:c.x|0,y:c.y|0})}
 
 /* ========== Grille de navigation grossière : accessibilité + champ de flux vers le générateur ========== */
 const RC=40,RN=W/RC,DX8=[1,-1,0,0,1,1,-1,-1],DY8=[0,0,1,-1,1,-1,1,-1],cellIdx=(x,y)=>Math.min(RN-1,y/RC|0)*RN+Math.min(RN-1,x/RC|0);
@@ -551,8 +590,8 @@ function reach(sx,sy,inc){const vis=new Uint8Array(RN*RN),q=[cellIdx(sx,sy)];vis
  for(let h=0;h<q.length;h++){const c=q[h],cx=c%RN,cy=c/RN|0;for(let k=0;k<4;k++){const nx=cx+DX8[k],ny=cy+DY8[k];if(nx<0||ny<0||nx>=RN||ny>=RN)continue;const n=ny*RN+nx;
   if(vis[n]||!freeAt(nx*RC+RC/2,ny*RC+RC/2,15,inc))continue;vis[n]=1;q.push(n)}}return vis}
 const mapReach=()=>MAPD.rc||(MAPD.rc=reach(MAPD.pspawn.x,MAPD.pspawn.y,false));
-function findCratePos(){const v=reach(P.x,P.y,true),C=CFG.ev.supply,cand=[];
- for(let c=0;c<v.length;c++)if(v[c]){const x=(c%RN)*RC+RC/2,y=(c/RN|0)*RC+RC/2,d=Math.hypot(x-P.x,y-P.y);
+function findCratePos(){const L=players.filter(live);if(!L.length)return null;const ref=L[Math.random()*L.length|0],v=reach(ref.x,ref.y,true),C=CFG.ev.supply,cand=[];
+ for(let c=0;c<v.length;c++)if(v[c]){const x=(c%RN)*RC+RC/2,y=(c/RN|0)*RC+RC/2,d=Math.hypot(x-ref.x,y-ref.y);
   if(d>=C.minDist&&d<=C.maxDist&&x>90&&y>90&&x<W-90&&y<H-90&&freeAt(x,y,26,true))cand.push([x,y])}
  if(!cand.length)return null;const c=cand[Math.random()*cand.length|0];return{x:c[0]+(Math.random()-.5)*16,y:c[1]+(Math.random()-.5)*16}}
 // Navigation statique par carte : cases libres (marge 18 px) et mouvements valides (pas de coin coupé, pas de mur fin traversé)
@@ -575,10 +614,10 @@ function bfsField(goals,genBlk){const nav=mapNav(),N=RN*RN,F=new Uint16Array(N).
 function buildFlow(){const nav=mapNav(),goals=[];
  for(let i=0;i<RN*RN;i++)if(nav.fr[i]){const cx=(i%RN)*RC+RC/2,cy=(i/RN|0)*RC+RC/2,dx=Math.max(GEN.x-cx,0,cx-GEN.x-GEN.w),dy=Math.max(GEN.y-cy,0,cy-GEN.y-GEN.h),d2=dx*dx+dy*dy;if(d2<=4900&&d2>=324)goals.push(i)}
  const f=bfsField(goals,true);GF=f.F;GP=f.P}
-// Champ de flux vers le joueur (recalculé au plus toutes les 0,4 s, seulement si un zombie en a besoin)
-function pfield(){if(!S.pf||S.pft<=0){S.pft=.4;const nav=mapNav(),c=cellIdx(P.x,P.y),cx=c%RN,cy=c/RN|0,goals=[c];
-  for(let k=0;k<8;k++){const nx=cx+DX8[k],ny=cy+DY8[k];if(nx>=0&&ny>=0&&nx<RN&&ny<RN&&nav.fr[ny*RN+nx])goals.push(ny*RN+nx)}S.pf=bfsField(goals,!!GEN)}
- return S.pf}
+// Champ de flux vers un joueur (recalculé au plus toutes les 0,4 s, seulement si un zombie en a besoin)
+function pfield(p){if(!p.pf||p.pft<=0){p.pft=.4;const nav=mapNav(),c=cellIdx(p.x,p.y),cx=c%RN,cy=c/RN|0,goals=[c];
+  for(let k=0;k<8;k++){const nx=cx+DX8[k],ny=cy+DY8[k];if(nx>=0&&ny>=0&&nx<RN&&ny<RN&&nav.fr[ny*RN+nx])goals.push(ny*RN+nx)}p.pf=bfsField(goals,!!GEN)}
+ return p.pf}
 function segClear(x0,y0,x1,y1,r){const dx=x1-x0,dy=y1-y0,n=Math.max(1,Math.ceil(Math.hypot(dx,dy)/18));for(let i=1;i<=n;i++)if(!freeAt(x0+dx*i/n,y0+dy*i/n,r))return false;return true}
 // Prochain point de passage : on suit le chemin du champ de flux, puis on vise le point le plus loin atteignable en ligne droite
 function flowWay(z,fl){const Pp=fl.P,F=fl.F;let c=cellIdx(z.x,z.y);
@@ -597,29 +636,31 @@ function pathAngle(z,tx,ty,dt,fl){z.pt-=dt;
 function hurtGen(d){if(!GEN||GEN.hp<=0||mode!='play')return;GEN.hp=Math.max(0,GEN.hp-d);GEN.hitT=.1;
  burst(GEN.x+Math.random()*GEN.w,GEN.y+Math.random()*GEN.h,3,'#fd6',160,.3,2);
  if(S.t-GEN.snd>.3){GEN.snd=S.t;SFX.hit()}
- if(S.t-GEN.warn>CFG.gen.warnEvery){GEN.warn=S.t;notify('⚠️ Le générateur est attaqué !',2.5);SFX.gen()}
- if(GEN.hp<=0){const cx=GEN.x+GEN.w/2,cy=GEN.y+GEN.h/2;notify('💥 Générateur détruit !',4);EX.push({x:cx,y:cy,r:230,t:0,big:true});burst(cx,cy,70,'#f59',450,.8,5);SFX.boom(true);S.shake=22;gameOver('gen')}}
+ if(S.t-GEN.warn>CFG.gen.warnEvery){GEN.warn=S.t;notify('⚠️ Le générateur est attaqué !',2.5);sfxAll('gen')}
+ if(GEN.hp<=0){const cx=GEN.x+GEN.w/2,cy=GEN.y+GEN.h/2;notify('💥 Générateur détruit !',4);EX.push({x:cx,y:cy,r:230,t:0,big:true});burst(cx,cy,70,'#f59',450,.8,5);SFX.boom(true);S.shake=22;emit({e:'x',x:cx|0,y:cy|0,b:1});gameOver('gen')}}
 function genUpdate(dt){if(!GEN)return;GEN.hitT-=dt;GEN.fx-=dt;const r=GEN.hp/GEN.mhp;
  if(GEN.fx<=0&&r<.5){GEN.fx=r<.25?.15:.35;burst(GEN.x+Math.random()*GEN.w,GEN.y+Math.random()*GEN.h,2,r<.25?'#fd6':'#777',60,.6,r<.25?2:5)}}
-function repairG(m){if(!GEN||S.prep<=0||S.rep>=CFG.gen.repairMax||GEN.hp>=GEN.mhp)return;const C=CFG.gen,cost=C.repairCash+S.wave*C.repairCashWave;
+function repairG(m){if(NET.role=='client')return cmd('repair',[m]);if(!GEN||S.prep<=0||S.rep>=CFG.gen.repairMax||GEN.hp>=GEN.mhp)return;const C=CFG.gen,cost=C.repairCash+S.wave*C.repairCashWave;
  if(m==0){if(P.cash<cost)return;P.cash-=cost}else{if(P.parts<C.repairParts)return;P.parts-=C.repairParts}
- const b=GEN.hp;GEN.hp=Math.min(GEN.mhp,GEN.hp+C.repairHp);S.rep++;notify('🔧 Générateur réparé (+'+Math.round(GEN.hp-b)+' PV)',3);SFX.pick();shopRender()}
+ const b=GEN.hp;GEN.hp=Math.min(GEN.mhp,GEN.hp+C.repairHp);S.rep++;notify('🔧 Générateur réparé (+'+Math.round(GEN.hp-b)+' PV)',3);if(P===ME)SFX.pick();uiShop()}
 
 /* ========== Vagues & zombies ========== */
-function startWave(){const n=++S.wave;S.prep=0;S.q=[];S.rep=0;const cnt=Math.round((4+n*3+(n*n/4|0))*(GEN?CFG.gen.countMul:1)),
+function startWave(){const n=++S.wave;S.prep=0;S.q=[];S.rep=0;const npl=Math.max(1,players.filter(p=>!p.gone).length),
+ cnt=Math.round((4+n*3+(n*n/4|0))*(GEN?CFG.gen.countMul:1)*(1+CFG.mp.countPerPlayer*(npl-1))),
  pt=n>=4?Math.min(.05+n*.008,.18):0,pe=n>=3?Math.min(.06+n*.004,.12):0,pf=n>=2?Math.min(.12+n*.01,.3):0;
  for(let i=0;i<cnt;i++){const r=Math.random();S.q.push(r<pt?'t':r<pt+pe?'e':r<pt+pe+pf?'f':'n')}
- const boss=n%5==0;if(boss)S.q.unshift('b');S.cap=Math.min(45+n*5,120);banner('VAGUE '+n,boss?'⚠️ BOSS ! ⚠️':cnt+' zombies');SFX.wave();rollEvents()}
-// Apparition hors écran, jamais dans un obstacle (test exact), loin du joueur (et du générateur / atteignable en mode Défense)
-function spawnZ(k){const t=ZT[k],n=S.wave;let x=0,y=0,ok=false;
- const rc=mapReach(),valid=(px,py)=>{if(Math.hypot(px-P.x,py-P.y)<380||!freeAt(px,py,t.r+2,true)||!rc[cellIdx(px,py)])return false;
+ const boss=n%5==0;if(boss)S.q.unshift('b');S.cap=Math.round(Math.min(Math.min(45+n*5,120)*(1+CFG.mp.capPerPlayer*(npl-1)),170));banner('VAGUE '+n,boss?'⚠️ BOSS ! ⚠️':cnt+' zombies');sfxAll('wave');rollEvents()}
+// Apparition hors écran, jamais dans un obstacle (test exact), loin de tous les joueurs (et du générateur / atteignable en mode Défense)
+function spawnZ(k){const t=ZT[k],n=S.wave,LV=players.filter(live),np=Math.max(1,LV.length);let x=0,y=0,ok=false;
+ const rc=mapReach(),minD=LV.length>1?CFG.mp.spawnMin:380,valid=(px,py,md)=>{for(const q of LV)if(Math.hypot(px-q.x,py-q.y)<md)return false;if(!freeAt(px,py,t.r+2,true)||!rc[cellIdx(px,py)])return false;
   if(GEN){const gx=clamp(px,GEN.x,GEN.x+GEN.w),gy=clamp(py,GEN.y,GEN.y+GEN.h);if(Math.hypot(px-gx,py-gy)<350||GF[cellIdx(px,py)]>=65535)return false}return true};
- for(let i=0;i<24&&!ok;i++){const a=Math.random()*6.283,rd=Math.hypot(VW,VH)/2+60;x=clamp(P.x+Math.cos(a)*rd,30,W-30);y=clamp(P.y+Math.sin(a)*rd,30,H-30);ok=valid(x,y)}
- for(let i=0;i<300&&!ok;i++){x=60+Math.random()*(W-120);y=60+Math.random()*(H-120);ok=valid(x,y)}
+ const anc=LV.length?LV[Math.random()*LV.length|0]:ME;
+ for(let i=0;i<24&&!ok;i++){const a=Math.random()*6.283,rd=Math.hypot(VW,VH)/2+60;x=clamp(anc.x+Math.cos(a)*rd,30,W-30);y=clamp(anc.y+Math.sin(a)*rd,30,H-30);ok=valid(x,y,minD)}
+ for(let i=0;i<300&&!ok;i++){x=60+Math.random()*(W-120);y=60+Math.random()*(H-120);ok=valid(x,y,i<150?minD:380)}
  if(!ok)return false;
- const hp=t.hp*(1+(k=='b'?.2:.15)*(n-1));
- Z.push({k,x,y,r:t.r,hp,mhp:hp,sp:t.sp*(1+Math.min(.03*(n-1),k=='f'?.4:.6))*(.9+Math.random()*.2),dmg:t.dmg*(1+.06*(n-1)),xp:t.xp,cash:t.cash,
-  cd:0,hit:0,ang:0,stk:0,side:0,tm:Math.random()*.6,lx:x,ly:y,ch:4,cg:0,id:Math.random()*9,dead:false,tg:0,pt:0,pr:Math.min(t.r,15),dn:0,nav:0,pc:1.5,pd:1e9,np:0});return true}
+ const hp=t.hp*(1+(k=='b'?.2:.15)*(n-1))*(1+CFG.mp.hpPerPlayer*(np-1));
+ Z.push({k,nid:++NETID,x,y,r:t.r,hp,mhp:hp,sp:t.sp*(1+Math.min(.03*(n-1),k=='f'?.4:.6))*(.9+Math.random()*.2),dmg:t.dmg*(1+.06*(n-1)),xp:t.xp,cash:t.cash,
+  cd:0,hit:0,ang:0,stk:0,side:0,tm:Math.random()*.6,lx:x,ly:y,ch:4,cg:0,id:Math.random()*9,dead:false,tg:0,pt:0,pr:Math.min(t.r,15),dn:0,nav:0,pc:1.5,pd:1e9,np:0,lo:undefined});return true}
 function burst(x,y,n,c,sp,life,s){for(let i=0;i<n&&PT.length<700;i++){const a=Math.random()*6.283,v=Math.random()*sp;PT.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,l:life*(.5+Math.random()*.5),c,s:s*(.5+Math.random())})}}
 
 /* ========== Dégâts flottants ========== */
@@ -632,90 +673,118 @@ function dnUpdate(dt){const D=CFG.dn;for(let i=DNUM.length-1;i>=0;i--){const q=D
  if(q.t<D.grow){const k=q.t/D.grow-1;q.sc=.35+.65*(1+2.2*k*k*k+1.2*k*k)}else q.sc=1; // easeOutBack : grossit vite, dépasse à peine
  q.al=q.t<D.grow+D.hold?1:Math.max(0,1-(q.t-D.grow-D.hold)/D.fade);
  if(q.t>=q.dur)DNUM.splice(i,1)}}
-// d : dégâts demandés ; on affiche ce qui est réellement retiré aux PV (pas de surplus sur le coup fatal)
-function damageZ(z,d,src){if(z.dead)return;const real=Math.min(d,Math.max(0,z.hp));z.hp-=d;z.hit=.08;if(real>0)dnum(z,real,src||'b');if(opt.blood)burst(z.x,z.y,5,'#a00',150,.5,3);SFX.hit();if(z.hp<=0)killZ(z)}
-function drop(x,y,k,v){if(DR.length>70)DR.shift();DR.push({x:x+Math.random()*30-15,y:y+Math.random()*30-15,k,v,t:22})}
-function killZ(z){z.dead=true;S.kills++;P.xp+=z.xp;CO.push({x:z.x,y:z.y,r:z.r,c:ZT[z.k].c,t:.6,a:z.ang});
+// d : dégâts demandés ; on affiche ce qui est réellement retiré aux PV (pas de surplus sur le coup fatal). own : id du joueur auteur (xp)
+function damageZ(z,d,src,own){if(z.dead)return;if(own!==undefined)z.lo=own;const real=Math.min(d,Math.max(0,z.hp));z.hp-=d;z.hit=.08;
+ if(real>0){dnum(z,real,src||'b');emit({e:'d',n:z.nid,x:z.x|0,y:z.y|0,r:z.r,v:Math.round(real*10)/10,s:src||'b'})}
+ if(opt.blood)burst(z.x,z.y,5,'#a00',150,.5,3);SFX.hit();if(z.hp<=0)killZ(z)}
+function drop(x,y,k,v){if(DR.length>70)DR.shift();DR.push({did:++NETID,x:x+Math.random()*30-15,y:y+Math.random()*30-15,k,v,t:22})}
+function killZ(z){z.dead=true;S.kills++;const kp=players[z.lo]&&live(players[z.lo])?players[z.lo]:(players.find(live)||ME);kp.xp+=z.xp;CO.push({x:z.x,y:z.y,r:z.r,c:ZT[z.k].c,t:.6,a:z.ang});
  if(opt.blood){DC.push({x:z.x,y:z.y,r:z.r*(.8+Math.random()*.6),a:.5});if(DC.length>140)DC.shift()}
- burst(z.x,z.y,14,'#8a0000',230,.7,4);SFX.die();const r=Math.random(),b=z.k=='b';
+ burst(z.x,z.y,14,'#8a0000',230,.7,4);SFX.die();emit({e:'k',x:z.x|0,y:z.y|0,r:z.r,c:KI[z.k],a:Math.round(z.ang*100)});const r=Math.random(),b=z.k=='b';
  if(r<.65||b)drop(z.x,z.y,'m',Math.round(z.cash*(.8+Math.random()*.4)));if(Math.random()<.22||b)drop(z.x,z.y,'a');
  if(Math.random()<.07||b){drop(z.x,z.y,'h');if(b)drop(z.x,z.y,'h')}if(Math.random()<.09||b){drop(z.x,z.y,'p');if(b){drop(z.x,z.y,'p');drop(z.x,z.y,'p')}}
- if(z.k=='e')explode(z.x,z.y,false);if(b)explode(z.x,z.y,true);
- while(P.xp>=xpNeed()){P.xp-=xpNeed();P.lvl++;S.pend++}}
-function explode(x,y,big){const r=big?230:115,dm=big?60:38;EX.push({x,y,r,t:0,big});
+ if(z.k=='e')explode(z.x,z.y,false,z.lo);if(b)explode(z.x,z.y,true,z.lo);
+ while(kp.xp>=xpNeedP(kp)){kp.xp-=xpNeedP(kp);kp.lvl++;kp.pend++}}
+function explode(x,y,big,own){const r=big?230:115,dm=big?60:38;EX.push({x,y,r,t:0,big});emit({e:'x',x:x|0,y:y|0,b:big?1:0});
  burst(x,y,big?70:30,big?'#f59':'#fa2',big?450:300,.8,5);burst(x,y,16,'#555',170,1.2,7);SFX.boom(big);S.shake=Math.max(S.shake,big?22:14);
- const d=Math.hypot(P.x-x,P.y-y);if(d<r)hurt(dm*(1-d/r)+5);
- for(const z of Z)if(!z.dead){const dd=Math.hypot(z.x-x,z.y-y);if(dd<r)damageZ(z,dm*3*(1-dd/r)+10,'ex')}
+ for(const p of players)if(live(p)){const d=Math.hypot(p.x-x,p.y-y);if(d<r)hurtP(p,dm*(1-d/r)+5)}
+ for(const z of Z)if(!z.dead){const dd=Math.hypot(z.x-x,z.y-y);if(dd<r)damageZ(z,dm*3*(1-dd/r)+10,'ex',own)}
  if(GEN&&GEN.hp>0){const dd=Math.hypot(clamp(x,GEN.x,GEN.x+GEN.w)-x,clamp(y,GEN.y,GEN.y+GEN.h)-y);if(dd<r)hurtGen((dm*(1-dd/r)+5)*CFG.gen.explMul)}}
-function hurt(d){if(P.inv>0||P.dod.inv>0||mode!='play')return;P.hp-=d;P.inv=.3;S.df=1;S.shake=Math.max(S.shake,8);SFX.hurt();if(opt.blood)burst(P.x,P.y,10,'#b00',180,.5,3);
- if(P.hp<=0){P.hp=0;gameOver()}}
-function gameOver(kind){if(mode=='over')return;const t=$('overT'),win=kind=='win';
+function hurtP(p,d){if(p.dead||p.gone||p.inv>0||p.dod.inv>0||!simOn())return;p.hp-=d;p.inv=.3;
+ if(p===ME){S.df=1;S.shake=Math.max(S.shake,8);SFX.hurt()}
+ if(opt.blood)burst(p.x,p.y,10,'#b00',180,.5,3);emit({e:'u',p:p.id});
+ if(p.hp<=0){p.hp=0;killPlayer(p)}}
+const hurt=d=>hurtP(P,d);
+// Dernier survivant à terre : fin de partie. Sinon le joueur est « à terre » jusqu'à la fin de la vague
+function killPlayer(p){if(players.every(q=>q===p||q.dead||q.gone)){gameOver('death');return}p.dead=true;notify('☠️ '+p.name+' est à terre — retour à la fin de la vague',4)}
+function respawnAll(){for(const p of players)if(p.dead&&!p.gone){const ref=players.find(q=>live(q)&&q!==p)||p;p.dead=false;p.hp=Math.round(p.mhp*CFG.mp.respawnHp);p.x=ref.x+24;p.y=ref.y+24;collide(p);p.inv=CFG.mp.respawnInv;p.rs++;p.inp=null;p.dod.t=0;notify('✨ '+p.name+' est de retour !',3)}}
+function gameOver(kind,fromNet){if(mode=='over')return;kind=kind||'death';if(!fromNet)emit({e:'o',k:kind});const t=$('overT'),win=kind=='win';
  t.textContent=win?'VICTOIRE !':kind=='gen'?'GÉNÉRATEUR DÉTRUIT':'GAME OVER';t.style.color=win?'#8f3':'#f44';t.style.textShadow=win?'0 0 18px #3a0':'0 0 18px #a00';
- $('g1').textContent=fmt(S.t);$('g2').textContent=S.kills;$('g3').textContent=S.wave;$('g4').textContent=P.lvl;
- $('g5').textContent=(G.cur=='defense'?'Défense du générateur':'Survie classique')+' — '+MAPD.name+(GEN?' — Générateur : '+Math.ceil(GEN.hp)+' PV':'');setMode('over')}
+ $('g1').textContent=fmt(S.t);$('g2').textContent=S.kills;$('g3').textContent=S.wave;$('g4').textContent=ME.lvl;
+ $('g5').textContent=(G.cur=='defense'?'Défense du générateur':'Survie classique')+' — '+MAPD.name+(players.length>1?' — Coop '+players.filter(p=>!p.gone).length+' joueurs':'')+(GEN?' — Générateur : '+Math.ceil(GEN.hp)+' PV':'');
+ $('againBtn').style.display=NET.role=='client'?'none':'block';const mn=$('mpnote');mn.style.display=NET.role=='solo'?'none':'block';mn.textContent=NET.role=='client'?"En attente de l'hôte pour rejouer…":'Les joueurs connectés rejoindront automatiquement la nouvelle partie.';
+ setMode('over')}
 
 /* ========== Esquive ========== */
-function dodge(){if(mode!='play')return;const D=P.dod;if(D.t>0||D.cd>0)return;
+function dodge(){if(mode!='play'||P.dead)return;const D=P.dod;if(D.t>0||D.cd>0)return;
  let dx=(K.d||K.arrowright?1:0)-(K.q||K.a||K.arrowleft?1:0),dy=(K.s||K.arrowdown?1:0)-(K.z||K.w||K.arrowup?1:0);
  if(dx||dy){const l=Math.hypot(dx,dy);dx/=l;dy/=l}else{dx=Math.cos(P.ang);dy=Math.sin(P.ang)}
  D.dx=dx;D.dy=dy;D.t=CFG.dodge.dur;D.cd=CFG.dodge.cd;D.inv=CFG.dodge.inv;D.tr=0;SFX.dodge();burst(P.x,P.y,8,'#8cf',120,.3,3)}
 
 /* ========== Armes ========== */
-function sel(i){if(P.ws[i].have&&i!=P.wi){P.wi=i;P.rel=0;P.cd=.15;SFX.click()}}
-function reload(){const w=WP[P.wi],s=P.ws[P.wi];if(P.rel>0||s.mag>=Math.round(w.mag*P.magM)||(P.wi&&s.res<=0))return;P.rel=w.rel*P.relM;SFX.rel()}
+function sel(i){if(NET.role=='client'){if(P.ws[i]&&P.ws[i].have&&i!=P.wi){cmd('sel',[i]);SFX.click()}return}
+ if(P.ws[i].have&&i!=P.wi){P.wi=i;P.rel=0;P.cd=.15;if(P===ME)SFX.click()}}
+function reload(){if(NET.role=='client'){if(P.rel<=0)cmd('reload');return}const w=WP[P.wi],s=P.ws[P.wi];if(P.rel>0||s.mag>=Math.round(w.mag*P.magM)||(P.wi&&s.res<=0))return;P.rel=w.rel*P.relM;if(P===ME)SFX.rel()}
 // Une balle touche-t-elle un obstacle solide à sa position actuelle ?
 function wallHit(b){if(b.x<1||b.y<1||b.x>=W-1||b.y>=H-1)return true;const L=ogrid[(b.y/CELL|0)*GW+(b.x/CELL|0)];
  if(L)for(const o of L)if(b.x>o.x&&b.x<o.x+o.w&&b.y>o.y&&b.y<o.y+o.h){burst(b.x,b.y,4,'#ddb',120,.25,2);return true}return false}
 // La balle touche-t-elle ce zombie ? true si elle doit disparaître (comportement perforant du sniper conservé)
 function tryHit(z,b){if(z.dead||b.h.indexOf(z)>=0)return false;const ex=z.x-b.x,ey=z.y-b.y;if(ex*ex+ey*ey>=(z.r+3)*(z.r+3))return false;
- damageZ(z,b.dmg);z.x+=b.vx*.004;z.y+=b.vy*.004;if(b.pier--<=0)return true;b.h.push(z);return false}
+ damageZ(z,b.dmg,undefined,b.o);z.x+=b.vx*.004;z.y+=b.vy*.004;if(b.pier--<=0)return true;b.h.push(z);return false}
 function fire(){const w=WP[P.wi],s=P.ws[P.wi];if(P.cd>0||P.rel>0)return;if(s.mag<=0){reload();return}
  const bf=P.bf,sp=CFG.ev.supply,mz=CFG.muzzle;
  s.mag--;P.cd=1/(w.rate*P.rateM*(bf.rate>0?sp.rate:1));const n=w.pel+P.proj,dm=w.dmg*(1+.18*s.lvl)*P.dmgM*(bf.dmg>0?sp.dmg:1);
  for(let i=0;i<n;i++){const a=P.ang+(Math.random()-.5)*w.spr*2+(w.pel==1&&n>1?(i-(n-1)/2)*.1:0),v=w.spd*(.9+Math.random()*.2);
   // départ près du bord du joueur ; portée mesurée depuis le même point qu'avant (+24-mz) ; test immédiat des murs et des zombies déjà au contact
-  const b={x:P.x+Math.cos(P.ang)*mz,y:P.y+Math.sin(P.ang)*mz,vx:Math.cos(a)*v,vy:Math.sin(a)*v,d:w.rng+(24-mz),dmg:dm,pier:w.pier,h:[]};
+  const b={x:P.x+Math.cos(P.ang)*mz,y:P.y+Math.sin(P.ang)*mz,vx:Math.cos(a)*v,vy:Math.sin(a)*v,d:w.rng+(24-mz),dmg:dm,pier:w.pier,h:[],o:P.id,bid:++NETID};
   if(wallHit(b))continue;
   // zombies déjà au contact : on teste le segment centre du joueur → départ (un zombie qui chevauche le joueur est touché)
   const sx=b.x,sy=b.y;let dead=false;
   for(const f of[0,.5,1]){b.x=P.x+(sx-P.x)*f;b.y=P.y+(sy-P.y)*f;for(const z of Z)if(tryHit(z,b)){dead=true;break}if(dead)break}
   b.x=sx;b.y=sy;if(!dead)B.push(b)}
- P.fl=.06;S.shake=Math.max(S.shake,P.wi==1?5:P.wi==4?6:2);SFX.shot(P.wi);burst(P.x+Math.cos(P.ang)*(mz+6),P.y+Math.sin(P.ang)*(mz+6),3,'#fd6',200,.15,2);
+ P.fl=.06;if(P===ME)S.shake=Math.max(S.shake,P.wi==1?5:P.wi==4?6:2);SFX.shot(P.wi);emit({e:'s',p:P.id,w:P.wi});burst(P.x+Math.cos(P.ang)*(mz+6),P.y+Math.sin(P.ang)*(mz+6),3,'#fd6',200,.15,2);
  if(s.mag<=0)reload()}
 function finishReload(){const s=P.ws[P.wi],need=Math.round(WP[P.wi].mag*P.magM)-s.mag,take=P.wi?Math.min(need,s.res):need;s.mag+=take;if(P.wi)s.res-=take}
-function useMed(){if(P.med>0&&P.hp<P.mhp){P.med--;P.hp=Math.min(P.mhp,P.hp+40);SFX.pick()}}
+function useMed(){if(NET.role=='client'){if(P.med>0&&P.hp<P.mhp)cmd('med');return}if(P.med>0&&P.hp<P.mhp){P.med--;P.hp=Math.min(P.mhp,P.hp+40);if(P===ME)SFX.pick()}}
 
 /* ========== Boucle de mise à jour ========== */
-function update(dt){
- S.t+=dt;S.pft-=dt;const D=P.dod,bf=P.bf;if(S.note&&S.note.t>0)S.note.t-=dt;
- // Joueur : esquive (impulsion rapide, sous-pas pour respecter les murs) ou déplacement normal
- const dx=(K.d||K.arrowright?1:0)-(K.q||K.a||K.arrowleft?1:0),dy=(K.s||K.arrowdown?1:0)-(K.z||K.w||K.arrowup?1:0);
+// Déplacement du joueur local : esquive (impulsion rapide en sous-pas, murs respectés) ou marche. active : entrées clavier/souris prises en compte
+function moveLocal(p,dt,active){const D=p.dod,bf=p.bf;
  if(D.t>0){const k=Math.min(dt,D.t),sp=CFG.dodge.dist/CFG.dodge.dur*k,n=Math.max(1,Math.ceil(sp/8)),st=sp/n;
-  for(let i=0;i<n;i++){P.x+=D.dx*st;P.y+=D.dy*st;collide(P)}
-  D.t-=dt;P.step+=dt;if((D.tr-=dt)<=0){D.tr=CFG.dodge.ghost;AFI.push({x:P.x,y:P.y,t:.22});if(AFI.length>14)AFI.shift();burst(P.x,P.y,2,'#8cf',70,.25,3)}}
- else if(dx||dy){const l=Math.hypot(dx,dy),sp=P.spd*P.spdM*(P.rel>0?.9:1)*(bf.spd>0?CFG.ev.supply.spd:1);P.x+=dx/l*sp*dt;P.y+=dy/l*sp*dt;collide(P);P.step+=dt}
- D.cd-=dt;D.inv-=dt;bf.dmg-=dt;bf.rate-=dt;bf.spd-=dt;
+  for(let i=0;i<n;i++){p.x+=D.dx*st;p.y+=D.dy*st;collide(p)}
+  D.t-=dt;p.step+=dt;if((D.tr-=dt)<=0){D.tr=CFG.dodge.ghost;AFI.push({x:p.x,y:p.y,t:.22});if(AFI.length>14)AFI.shift();burst(p.x,p.y,2,'#8cf',70,.25,3)}}
+ else if(active){const dx=(K.d||K.arrowright?1:0)-(K.q||K.a||K.arrowleft?1:0),dy=(K.s||K.arrowdown?1:0)-(K.z||K.w||K.arrowup?1:0);
+  if(dx||dy){const l=Math.hypot(dx,dy),sp=p.spd*p.spdM*(p.rel>0?.9:1)*(bf.spd>0?CFG.ev.supply.spd:1);p.x+=dx/l*sp*dt;p.y+=dy/l*sp*dt;collide(p);p.step+=dt}}
+ if(active)p.ang=Math.atan2(M.y+cam.y-p.y,M.x+cam.x-p.x)}
+// Mise à jour d'un joueur côté hôte/solo : le joueur local se déplace lui-même, un joueur distant envoie sa position (le client est maître de son déplacement)
+function updatePlayer(p,dt){const D=p.dod,bf=p.bf,me=p===ME;
+ D.cd-=dt;D.inv-=dt;bf.dmg-=dt;bf.rate-=dt;bf.spd-=dt;p.cd-=dt;p.inv-=dt;p.fl-=dt;p.pft-=dt;
+ if(p.dead)return;
+ let fireNow=false;
+ if(me){moveLocal(p,dt,mode=='play');fireNow=!!M.d&&mode=='play'}
+ else{const i=p.inp;if(i){p.x=i.x;p.y=i.y;p.ang=i.a;fireNow=!!i.f;collide(p)}}
+ p.hp=Math.min(p.mhp,p.hp+p.regen*dt);
+ if(p.rel>0){p.rel-=dt;if(p.rel<=0)as(p,finishReload)}
+ if(fireNow)as(p,fire)}
+// Effets visuels / minuteries communs (hôte, solo et clients)
+function updateFx(dt){
+ for(let i=PT.length-1;i>=0;i--){const p=PT[i];p.x+=p.vx*dt;p.y+=p.vy*dt;p.vx*=1-3*dt;p.vy*=1-3*dt;if((p.l-=dt)<=0){PT[i]=PT[PT.length-1];PT.pop()}}
+ for(let i=CO.length-1;i>=0;i--)if((CO[i].t-=dt)<=0)CO.splice(i,1);
+ for(let i=EX.length-1;i>=0;i--)if((EX[i].t+=dt)>.6)EX.splice(i,1);
  for(let i=AFI.length-1;i>=0;i--)if((AFI[i].t-=dt)<=0)AFI.splice(i,1);
- P.ang=Math.atan2(M.y+cam.y-P.y,M.x+cam.x-P.x);P.cd-=dt;P.inv-=dt;P.fl-=dt;P.hp=Math.min(P.mhp,P.hp+P.regen*dt);
- if(P.rel>0){P.rel-=dt;if(P.rel<=0)finishReload()}
- if(M.d)fire();
+ dnUpdate(dt);if(S.note&&S.note.t>0)S.note.t-=dt}
+function update(dt){
+ S.t+=dt;
+ for(const p of players)if(!p.gone)updatePlayer(p,dt);
  evUpdate(dt);genUpdate(dt);
  // Vagues
  if(S.prep>0){S.prep-=dt;if(S.prep<=0)startWave()}
  else{S.sp-=dt;if(S.sp<=0&&S.q.length&&Z.length<S.cap){const k=S.q.pop();if(!spawnZ(k))S.q.push(k);S.sp=Math.max(.12,.8-S.wave*.035)}
-  if(!S.q.length&&!Z.length){const c=50+S.wave*25;P.cash+=c;P.parts++;SFX.win();EV.next=null;
+  if(!S.q.length&&!Z.length){const c=50+S.wave*25;for(const p of players)if(!p.gone){p.cash+=c;p.parts++}sfxAll('win');EV.next=null;
    if(GEN&&S.wave>=CFG.gen.winWave){banner('VICTOIRE !','Le générateur a tenu '+S.wave+' vagues');gameOver('win');return}
-   S.prep=8;S.rep=0;banner('Vague '+S.wave+' terminée','+💰'+c+'  +🔧1')}}
+   respawnAll();S.prep=8;S.rep=0;banner('Vague '+S.wave+' terminée','+💰'+c+'  +🔧1')}}
+ const LV=players.filter(live);
  // Grille spatiale des zombies (liste chaînée) : évite les tests O(n²)
  gh.fill(-1);for(let i=0;i<Z.length;i++){const z=Z[i],c=(z.y/ZC|0)*ZG+(z.x/ZC|0);gn[i]=gh[c];gh[c]=i}
  for(const z of Z){if(z.dead)continue;z.cd-=dt;z.hit-=dt;
-  const d=Math.hypot(P.x-z.x,P.y-z.y);let a=Math.atan2(P.y-z.y,P.x-z.x),sp=z.sp,mv=d>z.r+P.r-2,atkG=false,dg=1e9;
-  if(GEN){ // mode Défense : cible = générateur (le joueur proche attire les zombies)
+  let T=null,d=1e9;for(const q of LV){const dd=Math.hypot(q.x-z.x,q.y-z.y);if(dd<d){d=dd;T=q}}if(!T){T=ME;d=Math.hypot(T.x-z.x,T.y-z.y)} // cible : le joueur vivant le plus proche
+  let a=Math.atan2(T.y-z.y,T.x-z.x),sp=z.sp,mv=d>z.r+T.r-2,atkG=false,dg=1e9;
+  if(GEN){ // mode Défense : cible = générateur (un joueur proche attire les zombies)
    const gx=clamp(z.x,GEN.x,GEN.x+GEN.w),gy=clamp(z.y,GEN.y,GEN.y+GEN.h);dg=Math.hypot(z.x-gx,z.y-gy);
    if(z.tg==0){if(dg>z.r+8&&d<CFG.gen.aggro){z.tg=1;z.pt=0}}else if(d>CFG.gen.deaggro){z.tg=0;z.pt=0}
    if(z.tg==0){atkG=dg<=z.r+3;mv=!atkG;a=atkG?Math.atan2(gy-z.y,gx-z.x):pathAngle(z,gx,gy,dt,{F:GF,P:GP})}}
   // cible = joueur : chasse directe (comportement d'origine) ; si le zombie ne progresse plus, il contourne les obstacles pendant quelques secondes
-  if(z.nav>0){z.nav-=dt;if(!atkG&&(!GEN||z.tg==1))a=pathAngle(z,P.x,P.y,dt,pfield())}
+  if(z.nav>0){z.nav-=dt;if(!atkG&&(!GEN||z.tg==1))a=pathAngle(z,T.x,T.y,dt,pfield(T))}
   if((z.pc-=dt)<=0){z.pc=1.5;if(!atkG&&(!GEN||z.tg==1)){if(d>120&&d>z.pd-25){if(++z.np>=2){z.nav=6;z.np=0;z.pt=0}}else z.np=0}z.pd=d}
   if(z.k=='b'){z.ch-=dt;if(z.ch<0){z.ch=5;z.cg=.9}if(z.cg>0){z.cg-=dt;sp*=3}}
   if((z.stk-=dt)>0&&!atkG)a+=z.side;z.ang=a;
@@ -726,8 +795,8 @@ function update(dt){
     if(d2<mn*mn&&d2>.01){const dd=Math.sqrt(d2),f=(mn-dd)*.5;z.x+=ex/dd*f;z.y+=ey/dd*f}}
   collide(z);
   if((z.tm-=dt)<=0){z.tm=.6;if(!atkG&&Math.hypot(z.x-z.lx,z.y-z.ly)<sp*.6*.3&&d>60){z.stk=1.1;z.side=(Math.random()<.5?1:-1)*(1.2+Math.random()*.6)}z.lx=z.x;z.ly=z.y}
-  if(z.k=='e'){if(d<z.r+P.r+34||(GEN&&z.tg==0&&dg<z.r+30))killZ(z)}
-  else if(d<z.r+P.r+3&&z.cd<=0){z.cd=.8;hurt(z.dmg)}
+  if(z.k=='e'){if(d<z.r+T.r+34||(GEN&&z.tg==0&&dg<z.r+30)){z.lo=T.id;killZ(z)}}
+  else if(d<z.r+T.r+3&&z.cd<=0){z.cd=.8;hurtP(T,z.dmg)}
   else if(atkG&&z.cd<=0){z.cd=.8;hurtGen(z.dmg*CFG.gen.dmgMul)}}
  // Balles (sous-pas de ≤6 px : ni murs fins ni zombies ne sont traversés)
  for(let i=B.length-1;i>=0;i--){const b=B[i],st=Math.hypot(b.vx,b.vy)*dt,n=Math.max(1,Math.ceil(st/6)),sx=b.vx*dt/n,sy=b.vy*dt/n;let dead=false;
@@ -738,28 +807,34 @@ function update(dt){
   if(dead){B[i]=B[B.length-1];B.pop()}}
  // Nettoyage des zombies morts
  let w=0;for(let i=0;i<Z.length;i++)if(!Z[i].dead)Z[w++]=Z[i];Z.length=w;
- // Objets au sol
- for(let i=DR.length-1;i>=0;i--){const o=DR[i];o.t-=dt;const d=Math.hypot(P.x-o.x,P.y-o.y);if(d<100){o.x+=(P.x-o.x)/d*260*dt;o.y+=(P.y-o.y)/d*260*dt}
-  if(d<26){if(o.k=='m')P.cash+=o.v;else if(o.k=='h')P.med++;else if(o.k=='p')P.parts++;
-   else P.ws.forEach((s,j)=>{if(s.have&&j)s.res+=Math.ceil(WP[j].mag*1.5)});SFX.pick();o.t=0}
+ // Objets au sol : ramassés par le joueur vivant le plus proche
+ for(let i=DR.length-1;i>=0;i--){const o=DR[i];o.t-=dt;let q=null,d=1e9;for(const p of LV){const dd=Math.hypot(p.x-o.x,p.y-o.y);if(dd<d){d=dd;q=p}}
+  if(q&&d<100&&d>.001){o.x+=(q.x-o.x)/d*260*dt;o.y+=(q.y-o.y)/d*260*dt}
+  if(q&&d<26){if(o.k=='m')q.cash+=o.v;else if(o.k=='h')q.med++;else if(o.k=='p')q.parts++;
+   else q.ws.forEach((s,j)=>{if(s.have&&j)s.res+=Math.ceil(WP[j].mag*1.5)});if(q===ME)SFX.pick();else emit({e:'pk',p:q.id});o.t=0}
   if(o.t<=0){DR[i]=DR[DR.length-1];DR.pop()}}
- for(let i=PT.length-1;i>=0;i--){const p=PT[i];p.x+=p.vx*dt;p.y+=p.vy*dt;p.vx*=1-3*dt;p.vy*=1-3*dt;if((p.l-=dt)<=0){PT[i]=PT[PT.length-1];PT.pop()}}
- for(let i=CO.length-1;i>=0;i--)if((CO[i].t-=dt)<=0)CO.splice(i,1);
- for(let i=EX.length-1;i>=0;i--)if((EX[i].t+=dt)>.6)EX.splice(i,1);
- dnUpdate(dt);
- if(S.pend>0&&mode=='play')openLevel()}
+ updateFx(dt);
+ // Niveaux : le joueur local ouvre son écran ; un joueur distant reçoit ses choix par un événement ciblé
+ for(const p of players){if(p.pend>0&&!p.gone){if(p===ME){if(mode=='play')openLevel()}else if(!p.choosing){p.choosing=true;p.choice=pickChoice();emit({e:'L',c:p.choice},p.id)}}}}
 
 /* ========== Niveau supérieur, boutique ========== */
 let choice=[];
-function openLevel(){S.pend--;choice=UPG.map((_,i)=>i).sort(()=>Math.random()-.5).slice(0,3);
- $('ups').innerHTML=choice.map((c,i)=>`<button class="up" onclick="pick(${i})">${i+1}. ${UPG[c][0]}</button>`).join('');setMode('up');SFX.lvl()}
-function pick(i){UPG[choice[i]][1]();if(S.pend>0)openLevel();else setMode('play')}
+const pickChoice=()=>UPG.map((_,i)=>i).sort(()=>Math.random()-.5).slice(0,3);
+function renderLevel(){$('ups').innerHTML=choice.map((c,i)=>`<button class="up" onclick="pick(${i})">${i+1}. ${UPG[c][0]}</button>`).join('')}
+function openLevel(){ME.pend--;choice=pickChoice();renderLevel();setMode('up');SFX.lvl()}
+function pick(i){if(NET.role=='client'){cmd('pick',[i]);setMode('play');return}UPG[choice[i]][1]();if(ME.pend>0)openLevel();else setMode('play')}
 function openShop(){if(mode!='play')return;setMode('shop');shopRender()}
 function closeShop(){setMode('play')}
-function buyW(i){if(P.cash>=WP[i].cost){P.cash-=WP[i].cost;const s=P.ws[i];s.have=true;s.res=WP[i].mag*3;P.wi=i;SFX.pick();shopRender()}}
-function buyA(i){const c=40+i*15;if(P.cash>=c){P.cash-=c;P.ws[i].res+=WP[i].mag*2;SFX.pick();shopRender()}}
-function upW(i){const s=P.ws[i],c=2+s.lvl*2;if(P.parts>=c&&s.lvl<5){P.parts-=c;s.lvl++;SFX.pick();shopRender()}}
-function buyM(){if(P.cash>=80){P.cash-=80;P.med++;SFX.pick();shopRender()}}
+const uiShop=()=>{if(P===ME&&mode=='shop')shopRender()};
+function buyW(i){if(NET.role=='client')return cmd('buyW',[i]);if(P.cash>=WP[i].cost){P.cash-=WP[i].cost;const s=P.ws[i];s.have=true;s.res=WP[i].mag*3;P.wi=i;if(P===ME)SFX.pick();uiShop()}}
+function buyA(i){if(NET.role=='client')return cmd('buyA',[i]);const c=40+i*15;if(P.cash>=c){P.cash-=c;P.ws[i].res+=WP[i].mag*2;if(P===ME)SFX.pick();uiShop()}}
+function upW(i){if(NET.role=='client')return cmd('upW',[i]);const s=P.ws[i],c=2+s.lvl*2;if(P.parts>=c&&s.lvl<5){P.parts-=c;s.lvl++;if(P===ME)SFX.pick();uiShop()}}
+function buyM(){if(NET.role=='client')return cmd('buyM');if(P.cash>=80){P.cash-=80;P.med++;if(P===ME)SFX.pick();uiShop()}}
+// Commandes d'un client exécutées par l'hôte pour le joueur concerné (P = ce joueur le temps de l'appel)
+const CMDS={sel:i=>sel(i),reload:()=>reload(),med:()=>useMed(),buyW:i=>buyW(i),buyA:i=>buyA(i),upW:i=>upW(i),buyM:()=>buyM(),repair:m=>repairG(m),
+ pick:i=>{const p=P;if(!p.choosing||!p.choice||!(i>=0&&i<p.choice.length))return;UPG[p.choice[i]][1]();p.choice=null;p.choosing=false;p.pend--}};
+function execCmd(p,c,a){const f=CMDS[c];if(!f)return;const i=a&&a[0];if(a&&a.length&&!Number.isInteger(i))return;
+ if(['sel','buyW','buyA','upW'].includes(c)&&!(i>=0&&i<WP.length))return;if(c=='repair'&&i!==0&&i!==1)return;as(p,()=>f(i))}
 function shopRender(){const b=(t,ok,f)=>`<button ${ok?'':'disabled'} onclick="${f}">${t}</button>`;let h=`<h2>🛒 Boutique</h2><p class="c">💰 ${P.cash} &nbsp; 🔧 ${P.parts}</p>`;
  WP.forEach((w,i)=>{const s=P.ws[i];
   if(!s.have)h+=b(`Acheter : ${w.n} — 💰${w.cost}`,P.cash>=w.cost,`buyW(${i})`);
@@ -770,8 +845,182 @@ function shopRender(){const b=(t,ok,f)=>`<button ${ok?'':'disabled'} onclick="${
    +b(`⚡ Réparer le générateur (+${C.repairHp} PV) — 💰${cost}`,can&&P.cash>=cost,'repairG(0)')+b(`⚡ Réparer avec des pièces (+${C.repairHp} PV) — 🔧${C.repairParts}`,can&&P.parts>=C.repairParts,'repairG(1)')}
  h+=b(`💊 Trousse de soin (${P.med}) — 💰80`,P.cash>=80,'buyM()')+b('Fermer (B)',true,'closeShop()');$('shopbox').innerHTML=h}
 
+
+/* ========== Multijoueur coop : WebRTC pair-à-pair (PeerJS) ==========
+   L'hôte exécute toute la simulation (update). Chaque client envoie sa position/visée/tir (≈30 Hz) et des commandes fiabilisées
+   (achats, rechargement…) ; l'hôte renvoie des instantanés compacts (≈15 Hz) + des événements numérotés renvoyés jusqu'à accusé.
+   Les cartes sont déterministes (graine fixe) : seule la carte choisie et le mode sont envoyés. */
+function netLoad(cb){if(window.Peer)return cb(true);const urls=CFG.net.lib.slice();let done=false;const fin=ok=>{if(!done){done=true;cb(ok)}};
+ setTimeout(()=>fin(!!window.Peer),12000);
+ (function next(){const u=urls.shift();if(!u)return fin(false);const sc=document.createElement('script');sc.src=u;sc.onload=()=>window.Peer?fin(true):next();sc.onerror=next;document.head.appendChild(sc)})()}
+const genCode=()=>{const A='ABCDEFGHJKMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<5;i++)s+=A[Math.random()*A.length|0];return s};
+function peerOpts(){const o=Object.assign({debug:1},CFG.net.peer);if(CFG.net.ice.length&&!o.config)o.config={iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:global.stun.twilio.com:3478'}].concat(CFG.net.ice)};return o}
+const netErr=e=>{const t=e&&e.type;return t=='peer-unavailable'?'Salle introuvable : vérifiez le code':t=='unavailable-id'?'Code déjà utilisé, réessayez':
+ (t=='network'||t=='server-error'||t=='socket-error'||t=='socket-closed')?'Service de mise en relation injoignable (réseau ou pare-feu)':t=='browser-incompatible'?'Navigateur incompatible (WebRTC requis)':'Erreur réseau : '+(t||e)};
+const ns=(c,m)=>{try{if(c&&c.open!==false)c.send(m)}catch(_){}};
+const cleanName=n=>String(n||'').replace(/[<>&"']/g,'').trim().slice(0,12)||'Joueur';
+const myName=()=>cleanName($('mpname').value),saveName=()=>{try{localStorage.setItem('dz_name',$('mpname').value)}catch(_){}};
+const mpMsg=t=>{$('mpmsg').textContent=t||''};
+const lobbyList=()=>[{id:0,name:NET.name,col:PCOL[0]}].concat(NET.cl.map(c=>({id:c.id,name:c.name,col:PCOL[c.id%4]})));
+
+/* ----- Salon (interface) ----- */
+function initNetUI(){try{const n=localStorage.getItem('dz_name');if(n)$('mpname').value=n}catch(_){}
+ const m=/[?&]room=([A-Za-z0-9]{4,5})/.exec(location.search||'');if(m){$('mpcode').value=m[1].toUpperCase();setMode('mp');mpRender()}}
+function openMP(){setMode('mp');mpRender()}
+function mpBack(){netLeave();setMode('menu')}
+function mpRender(){const host=NET.role=='host',cli=NET.role=='client',inRoom=host||cli;
+ $('mp0').style.display=inRoom?'none':'block';$('mp1').style.display=inRoom?'block':'none';$('mpcodev').textContent=NET.code||'';
+ const L=host?lobbyList():NET.lobby;$('mpl').innerHTML=L.map(p=>`<div style="border-left:5px solid ${p.col}">${esc(p.name)}${p.id==0?' 👑 (hôte)':''}${cli&&p.id==NET.myId?' (vous)':''}</div>`).join('');
+ $('mpmode').style.display=host?'flex':'none';$('mpgo').style.display=host?'block':'none';$('mplink').style.display=host?'block':'none';$('mpwait').style.display=cli?'block':'none';
+ $('mpm0').className=NET.lobbyMode=='survie'?'on2':'';$('mpm1').className=NET.lobbyMode=='defense'?'on2':'';
+ if(cli)$('mpwait').textContent='Mode : '+(NET.lobbyMode=='defense'?'Défense du générateur':'Survie classique')+" — en attente du lancement par l'hôte…"}
+function mpCopy(){const u=location.href.split('#')[0].split('?')[0]+'?room='+NET.code;try{navigator.clipboard.writeText(u).then(()=>mpMsg('Lien copié !'),()=>mpMsg(u))}catch(_){mpMsg(u)}}
+function mpMode(m){if(NET.role!='host')return;NET.lobbyMode=m;lobbyBroadcast()}
+function mpStart(){if(NET.role=='host'&&!NET.started)hostStartGame()}
+function again(){if(NET.role=='host')hostStartGame();else if(NET.role=='solo')play()}
+function toMenu(){if(NET.role!='solo')netLeave();reset();setMode('menu')}
+function netLeave(){try{for(const c of NET.cl)ns(c.conn,{t:'bye'});if(NET.role=='client')ns(NET.conn,{t:'bye'})}catch(_){}
+ const pr=NET.peer;setTimeout(()=>{try{pr&&pr.destroy()}catch(_){}},200);
+ Object.assign(NET,{role:'solo',started:false,peer:null,conn:null,code:'',cl:[],evq:[],eid:0,cmds:[],cid:0,ackE:0,lastSn:-1,lobby:[],rtt:0,gid:0,myId:0,tmc:'',welcomed:false});mpRender()}
+
+/* ----- Hôte : création de la salle ----- */
+function mpCreate(){if(NET.role!='solo')return;NET.name=myName();saveName();mpMsg('Connexion au service de mise en relation…');
+ netLoad(ok=>{if(!ok){mpMsg('Impossible de charger la bibliothèque réseau (PeerJS). Vérifiez votre connexion.');return}
+  let tries=0;(function go(){const code=genCode(),peer=new Peer(CFG.net.room+code,peerOpts());NET.peer=peer;let opened=false;
+   peer.on('open',()=>{opened=true;NET.role='host';NET.code=code;NET.started=false;NET.cl=[];NET.now=0;mpMsg('');mpRender()});
+   peer.on('connection',hostConn);
+   peer.on('disconnected',()=>{try{if(NET.role=='host')peer.reconnect()}catch(_){}});
+   peer.on('error',e=>{if(!opened&&e&&e.type=='unavailable-id'&&tries++<5){try{peer.destroy()}catch(_){}go()}else if(!opened){mpMsg(netErr(e));NET.peer=null}else if(e&&e.type!='peer-unavailable')mpMsg(netErr(e))})})()})}
+function lobbyBroadcast(){for(const c of NET.cl)ns(c.conn,{t:'lobby',pl:lobbyList(),mode:NET.lobbyMode});mpRender()}
+function hostConn(c){let cl=null;
+ c.on('data',m=>{if(!m||typeof m!='object')return;
+  if(cl&&m.t=='hi'){ns(c,{t:'wel',id:cl.id,code:NET.code,pl:lobbyList(),mode:NET.lobbyMode});return}
+  if(!cl){if(m.t!='hi')return;
+   const no=r=>{ns(c,{t:'no',r});setTimeout(()=>{try{c.close()}catch(_){}},300)};
+   if(m.v!==CFG.net.ver)return no('Version du jeu différente');if(NET.started)return no('Partie déjà en cours');if(NET.cl.length+1>=CFG.mp.max)return no('Salle pleine');
+   let id=1;while(NET.cl.some(x=>x.id==id))id++;cl={id,conn:c,name:cleanName(m.n),ackE:0,cidDone:0,lastIn:NET.now};NET.cl.push(cl);
+   ns(c,{t:'wel',id,code:NET.code,pl:lobbyList(),mode:NET.lobbyMode});lobbyBroadcast();return}
+  hostMsg(cl,m)});
+ const drop=()=>{if(cl)hostDrop(cl)};c.on('close',drop);c.on('error',drop)}
+function hostDrop(cl){const i=NET.cl.indexOf(cl);if(i<0)return;NET.cl.splice(i,1);try{cl.conn.close()}catch(_){}
+ if(NET.started){const p=players[cl.id];if(p&&!p.gone){p.gone=true;p.dead=true;notify('🔌 '+p.name+' a quitté la partie',3);if(players.every(q=>q.dead||q.gone)&&mode!='over')gameOver('death')}}
+ else lobbyBroadcast()}
+function hostStartGame(){if(NET.role!='host')return;const cls=NET.cl.slice().sort((a,b)=>a.id-b.id);cls.forEach((c,i)=>c.id=i+1);
+ const names=[NET.name].concat(cls.map(c=>c.name));G.mode=NET.lobbyMode;G.map=Math.random()<.5?'rural':'city';
+ NET.gid=(Math.random()*1e9)|0;NET.started=true;NET.evq=[];NET.eid=0;NET.seq=0;NET.acc.snap=0;
+ for(const c of cls){c.ackE=0;c.cidDone=0;c.lastIn=NET.now}
+ initAudio();reset(true,names.map(n=>({name:n})),0);setMode('play');
+ NET.goMsg=n=>({t:'go',gid:NET.gid,map:G.map,mode:G.mode,pl:names.map(n=>({name:n})),me:n});for(const c of cls){c.gotGo=false;ns(c.conn,NET.goMsg(c.id))}}
+// Messages reçus par l'hôte : entrées (position du client = autorité locale), commandes numérotées, ping
+function hostMsg(cl,m){cl.lastIn=NET.now;
+ if(m.t=='i'){const p=players[cl.id];if(!NET.started||!p||m.gid!==NET.gid)return;cl.gotGo=true;if(m.ak>cl.ackE)cl.ackE=m.ak;
+  if(m.rs===p.rs&&Number.isFinite(m.x)&&Number.isFinite(m.y)&&Number.isFinite(m.a))p.inp={x:clamp(m.x,14,W-14),y:clamp(m.y,14,H-14),a:m.a/100,f:m.f?1:0};
+  if(m.di>0)p.dod.inv=Math.max(p.dod.inv,Math.min(+m.di||0,CFG.dodge.inv+.05))}
+ else if(m.t=='c'){const p=players[cl.id];if(!NET.started||!p||m.gid!==NET.gid||!Array.isArray(m.cs))return;
+  for(const c of m.cs.slice().sort((a,b)=>a.id-b.id)){if(c&&c.id===cl.cidDone+1&&typeof c.c=='string'){cl.cidDone=c.id;execCmd(p,c.c,Array.isArray(c.a)?c.a.slice(0,2):[])}}}
+ else if(m.t=='p')ns(cl.conn,{t:'q',ts:m.ts});
+ else if(m.t=='bye')hostDrop(cl)}
+// Instantané personnalisé : seules les entités proches du joueur (rayon CFG.net.view) sont envoyées, positions entières
+function buildSnap(c){const me=players[c.id],ref=me.dead?(players.find(live)||me):me,R=CFG.net.view,Zs=[],Bs=[],Ds=[];
+ for(const z of Z){if(z.dead||Math.abs(z.x-ref.x)>R||Math.abs(z.y-ref.y)>R)continue;Zs.push([z.nid,KI[z.k],Math.round(z.x),Math.round(z.y),Math.round(z.ang*20),Math.round(z.hp/z.mhp*100),z.hit>0?1:0]);if(Zs.length>=220)break}
+ for(const b of B){if(Math.abs(b.x-ref.x)>R||Math.abs(b.y-ref.y)>R)continue;Bs.push([b.bid,Math.round(b.x),Math.round(b.y),Math.round(b.vx),Math.round(b.vy)]);if(Bs.length>=150)break}
+ for(const o of DR){if(Math.abs(o.x-ref.x)>R||Math.abs(o.y-ref.y)>R)continue;Ds.push([o.did,KD[o.k],Math.round(o.x),Math.round(o.y),Math.round(o.t)])}
+ const E=[];for(const e of NET.evq)if(e.i>c.ackE&&(e.to===undefined||e.to===c.id)){E.push(e);if(E.length>=80)break}
+ const sa=EV.act.find(a=>a.type=='supply'),crate=EV.crate?[Math.round(EV.crate.x),Math.round(EV.crate.y),Math.round(sa?sa.dur-sa.t:0)]:0,r1=v=>Math.round(v*10)/10;
+ return{t:'s',gid:NET.gid,n:++NET.seq,
+  P:players.map(p=>[p.id,r1(p.x),r1(p.y),Math.round(p.ang*100),Math.round(p.hp),p.mhp,p.fl>0?1:0,p.dead?1:0,(p.inv>0||p.dod.inv>0)?1:0,p.wi,p.rs,p.gone?1:0]),
+  me:{hp:r1(me.hp),mhp:me.mhp,cash:me.cash,parts:me.parts,xp:me.xp,lvl:me.lvl,med:me.med,wi:me.wi,rel:+me.rel.toFixed(2),relM:me.relM,rateM:me.rateM,spdM:me.spdM,magM:me.magM,
+   ws:me.ws.map(s=>[s.have?1:0,s.mag,s.res,s.lvl]),bf:[+Math.max(0,me.bf.dmg).toFixed(1),+Math.max(0,me.bf.rate).toFixed(1),+Math.max(0,me.bf.spd).toFixed(1)]},
+  Z:Zs,B:Bs,D:Ds,ev:[+EV.fog.toFixed(2),+EV.dark.toFixed(2),crate],g:GEN?r1(GEN.hp):null,
+  s:[S.wave,+Math.max(0,S.prep).toFixed(1),S.q.length+Z.length,S.kills,S.rep,+S.t.toFixed(2),Math.round(S.cap)],ca:c.cidDone,E}}
+
+/* ----- Client : rejoindre ----- */
+function mpJoin(){if(NET.role!='solo')return;const code=($('mpcode').value||'').trim().toUpperCase();if(code.length<4){mpMsg('Entrez le code de la salle');return}
+ NET.name=myName();saveName();mpMsg('Connexion…');
+ netLoad(ok=>{if(!ok){mpMsg('Impossible de charger la bibliothèque réseau (PeerJS). Vérifiez votre connexion.');return}
+  const peer=new Peer(undefined,peerOpts());NET.peer=peer;let done=false,to=0;
+  const fail=t=>{if(done)return;done=true;clearTimeout(to);mpMsg(t);if(NET.role=='solo'){const pr=NET.peer;NET.peer=null;try{pr&&pr.destroy()}catch(_){}}else netLeave()};
+  to=setTimeout(()=>fail('Salle introuvable ou connexion impossible (délai dépassé)'),12000);
+  peer.on('error',e=>fail(netErr(e)));
+  peer.on('open',()=>{const c=peer.connect(CFG.net.room+code,{serialization:'json'});NET.conn=c;
+   c.on('open',()=>{clearTimeout(to);done=true;NET.role='client';NET.started=false;NET.welcomed=false;NET.code=code;NET.now=0;NET.lastRx=0;NET.acc.cmd=0;ns(c,{t:'hi',n:NET.name,v:CFG.net.ver});mpMsg('');mpRender()});
+   c.on('data',onClientData);c.on('close',()=>clientLost());c.on('error',e=>fail(netErr(e)))})})}
+function onClientData(m){if(!m||typeof m!='object')return;NET.lastRx=NET.now;
+ switch(m.t){
+  case 'wel':NET.welcomed=true;NET.myId=m.id;NET.lobby=m.pl;NET.lobbyMode=m.mode;NET.code=m.code||NET.code;mpRender();break;
+  case 'no':{const r=m.r;netLeave();mpMsg(r);break}
+  case 'lobby':NET.lobby=m.pl;NET.lobbyMode=m.mode;mpRender();break;
+  case 'go':if(!(NET.started&&NET.gid===m.gid))clientGo(m);break;
+  case 's':if(NET.started&&m.gid===NET.gid)onSnap(m);break;
+  case 'q':NET.rtt=Math.max(0,NET.now-m.ts);break;
+  case 'bye':clientLost("L'hôte a fermé la salle");break}}
+function clientGo(m){G.mode=m.mode;G.map=m.map;NET.gid=m.gid;NET.started=true;NET.lastSn=-1;NET.ackE=0;NET.cmds=[];NET.cid=0;NET.lastRx=NET.now;NET.myId=m.me;initAudio();
+ reset(true,m.pl,m.me);setMode('play')}
+function clientLost(msg){if(NET.role!='client')return;const was=NET.started;netLeave();if(was)reset();setMode('mp');mpMsg(msg||"Connexion perdue avec l'hôte")}
+function cmd(c,a){NET.cmds.push({id:++NET.cid,c,a:a||[]});if(NET.cmds.length>40)NET.cmds.shift();sendCmds()}
+function sendCmds(){if(NET.role!='client'||!NET.conn||!NET.cmds.length)return;ns(NET.conn,{t:'c',gid:NET.gid,cs:NET.cmds.slice(0,8)})}
+function sendInput(){ns(NET.conn,{t:'i',gid:NET.gid,n:++NET.seq,x:Math.round(ME.x*10)/10,y:Math.round(ME.y*10)/10,a:Math.round(ME.ang*100),
+ f:(M.d&&mode=='play'&&!ME.dead)?1:0,di:ME.dod.inv>0?+ME.dod.inv.toFixed(2):0,ak:NET.ackE,rs:ME.rs})}
+// Application d'un instantané reçu par un client (miroir de l'état de l'hôte)
+function onSnap(m){
+ if(m.E)for(const e of m.E)if(e.i>NET.ackE){NET.ackE=e.i;applyEvent(e)}
+ if(m.n<=NET.lastSn)return;NET.lastSn=m.n;NET.cmds=NET.cmds.filter(c=>c.id>m.ca);
+ const s=m.s;S.wave=s[0];S.prep=s[1];S.left=s[2];S.kills=s[3];S.rep=s[4];S.cap=s[6];if(Math.abs(S.t-s[5])>.5)S.t=s[5];else S.t+=(s[5]-S.t)*.25;
+ for(const a of m.P){const p=players[a[0]];if(!p)continue;const x=a[1],y=a[2],dead=!!a[7],rs=a[10];p.gone=!!a[11];p.mhp=a[5];
+  if(p===ME){if(rs!==p.rs){p.x=x;p.y=y;p.dod.t=0}p.rs=rs;p.dead=dead}
+  else{p.dead=dead;p.hp=a[4];p.tx=x;p.ty=y;if(p.tx0===undefined){p.x=x;p.y=y;p.tx0=1}p.ang=a[3]/100;p.wi=a[9];p.inv=a[8]?.2:0;if(a[6])p.fl=.08}}
+ const q=m.me;ME.hp=q.hp;ME.mhp=q.mhp;ME.cash=q.cash;ME.parts=q.parts;ME.xp=q.xp;ME.lvl=q.lvl;ME.med=q.med;ME.wi=q.wi;ME.rel=q.rel;ME.relM=q.relM;ME.rateM=q.rateM;ME.spdM=q.spdM;ME.magM=q.magM;
+ q.ws.forEach((a,i)=>{const w=ME.ws[i];w.have=!!a[0];w.mag=a[1];w.res=a[2];w.lvl=a[3]});ME.bf.dmg=q.bf[0];ME.bf.rate=q.bf[1];ME.bf.spd=q.bf[2];
+ const seen=new Map();for(const a of m.Z){const nid=a[0];let z=NZ.get(nid);if(!z){const t=ZT[KS[a[1]]];z={nid,k:KS[a[1]],x:a[2],y:a[3],r:t.r,hp:1,mhp:1,ang:0,hit:0,id:nid*.37,dn:0,dead:false}}
+  z.tx=a[2];z.ty=a[3];z.ang=a[4]/20;z.hp=a[5]/100;if(a[6])z.hit=.08;seen.set(nid,z)}
+ NZ=seen;Z=Array.from(seen.values());
+ const lat=Math.min(.15,NET.rtt/2),nb=new Map();for(const a of m.B){let b=NB.get(a[0]);if(!b)b={bid:a[0],x:a[1]+a[3]*lat,y:a[2]+a[4]*lat,vx:a[3],vy:a[4]};else{b.vx=a[3];b.vy=a[4];if(Math.hypot(b.x-a[1],b.y-a[2])>220){b.x=a[1];b.y=a[2]}}nb.set(a[0],b)}
+ NB=nb;B=Array.from(nb.values());
+ DR=m.D.map(a=>({did:a[0],k:KDS[a[1]],x:a[2],y:a[3],t:a[4]}));
+ EV.fog=m.ev[0];EV.dark=m.ev[1];const c=m.ev[2];if(c){EV.crate={x:c[0],y:c[1]};EV.act=[{type:'supply',t:0,dur:c[2]}]}else{EV.crate=null;EV.act=[]}
+ if(GEN&&m.g!=null){if(m.g<GEN.hp-.5)GEN.hitT=.1;GEN.hp=m.g}
+ if(mode=='shop'){const sig=[ME.cash,ME.parts,ME.med,JSON.stringify(ME.ws),Math.ceil(S.prep),S.rep,GEN?Math.ceil(GEN.hp):0].join('|');if(sig!==NET.shopSig){NET.shopSig=sig;shopRender()}}}
+// Événements de l'hôte : effets visuels/sonores et messages (les dégâts, la mort, etc. sont décidés par l'hôte)
+function applyEvent(e){switch(e.e){
+ case 'k':CO.push({x:e.x,y:e.y,r:e.r,c:ZT[KS[e.c]].c,t:.6,a:e.a/100});if(opt.blood){DC.push({x:e.x,y:e.y,r:e.r*(.8+Math.random()*.6),a:.5});if(DC.length>140)DC.shift()}burst(e.x,e.y,14,'#8a0000',230,.7,4);SFX.die();break;
+ case 'd':{const z=NZ.get(e.n)||{x:e.x,y:e.y,r:e.r,dn:0};dnum(z,e.v,e.s);if(opt.blood)burst(e.x,e.y,5,'#a00',150,.5,3);if(NET.now-NET.lastHit>.05){NET.lastHit=NET.now;SFX.hit()}break}
+ case 'x':{const big=!!e.b;EX.push({x:e.x,y:e.y,r:big?230:115,t:0,big});burst(e.x,e.y,big?70:30,big?'#f59':'#fa2',big?450:300,.8,5);burst(e.x,e.y,16,'#555',170,1.2,7);SFX.boom(big);const d=Math.hypot(ME.x-e.x,ME.y-e.y);if(d<700)S.shake=Math.max(S.shake,(big?22:14)*(1-d/700));break}
+ case 'u':{if(e.p===ME.id){S.df=1;S.shake=Math.max(S.shake,8);SFX.hurt()}const p=players[e.p];if(p&&opt.blood)burst(p.x,p.y,10,'#b00',180,.5,3);break}
+ case 's':{const p=players[e.p];if(p&&p!==ME){p.fl=.06;if(Math.hypot(p.x-ME.x,p.y-ME.y)<1100)SFX.shot(e.w)}break}
+ case 'b':bannerL(e.t,e.s);break;
+ case 'a':annL(e.t,e.s);break;
+ case 'n':S.note={s:e.s,t:e.d};break;
+ case 'sf':if(SFX[e.n])SFX[e.n]();break;
+ case 'pk':if(e.p===ME.id)SFX.pick();break;
+ case 'bu':burst(e.x,e.y,18,'#4df',220,.6,4);break;
+ case 'L':choice=e.c;renderLevel();setMode('up');SFX.lvl();break;
+ case 'o':gameOver(e.k,true);break}}
+// Image côté client : déplacement local (autorité sur sa position), retour immédiat du tir, lissage des entités distantes
+function clientTick(dt){S.t+=dt;const me=ME,D=me.dod,bf=me.bf;
+ D.cd-=dt;D.inv-=dt;bf.dmg-=dt;bf.rate-=dt;bf.spd-=dt;me.fl-=dt;
+ if(!me.dead){moveLocal(me,dt,mode=='play');const w=me.ws[me.wi];
+  if(M.d&&mode=='play'&&w.mag>0&&me.rel<=0){me.lcd-=dt;if(me.lcd<=0){me.lcd=1/(WP[me.wi].rate*me.rateM*(bf.rate>0?CFG.ev.supply.rate:1));me.fl=.06;SFX.shot(me.wi)}}else me.lcd=0}
+ const k=1-Math.exp(-dt*14);
+ for(const z of Z){z.x+=(z.tx-z.x)*k;z.y+=(z.ty-z.y)*k;z.hit-=dt}
+ for(const p of players)if(p!==ME){if(p.tx!==undefined){p.x+=(p.tx-p.x)*k;p.y+=(p.ty-p.y)*k}p.fl-=dt}
+ for(const b of B){b.x+=b.vx*dt;b.y+=b.vy*dt}
+ if(EV.act.length)EV.act[0].t+=dt;
+ genUpdate(dt);updateFx(dt)}
+// Réseau : appelé à chaque image (hôte et client)
+function netTick(dt){if(NET.role=='solo')return;NET.now+=dt;
+ if(NET.role=='host'){if(!NET.started){NET.acc.snap+=dt;if(NET.acc.snap>=1){NET.acc.snap=0;for(const c of NET.cl)ns(c.conn,{t:'lobby',pl:lobbyList(),mode:NET.lobbyMode})}return}
+  NET.acc.cmd+=dt;if(NET.acc.cmd>=.5){NET.acc.cmd=0;for(const c of NET.cl)if(!c.gotGo)ns(c.conn,NET.goMsg(c.id))}
+  for(const c of NET.cl.slice())if(NET.now-c.lastIn>CFG.net.timeout)hostDrop(c);
+  NET.acc.snap+=dt;if(NET.acc.snap>=1/CFG.net.snapHz){NET.acc.snap=0;for(const c of NET.cl)ns(c.conn,buildSnap(c))}
+  if(NET.cl.length){let mn=1e12;for(const c of NET.cl)mn=Math.min(mn,c.ackE);NET.evq=NET.evq.filter(e=>e.i>mn)}else NET.evq.length=0}
+ else{if(NET.now-NET.lastRx>CFG.net.timeout){clientLost();return}
+  if(!NET.started){NET.acc.cmd+=dt;if(!NET.welcomed&&NET.conn&&NET.acc.cmd>=.5){NET.acc.cmd=0;ns(NET.conn,{t:'hi',n:NET.name,v:CFG.net.ver})}return}
+  NET.acc.inp+=dt;if(NET.acc.inp>=1/CFG.net.inHz){NET.acc.inp=0;sendInput()}
+  NET.acc.cmd+=dt;if(NET.cmds.length&&NET.acc.cmd>=CFG.net.cmdRetry){NET.acc.cmd=0;sendCmds()}
+  NET.acc.ping+=dt;if(NET.acc.ping>=2){NET.acc.ping=0;ns(NET.conn,{t:'p',ts:NET.now})}}}
+
 /* ========== Rendu : effets (brouillard, panne), générateur, caisse ========== */
-let fogTile=null;
+let fogTile=null,CAMP=null;
 function mkFog(){const s=384,c=document.createElement('canvas');c.width=c.height=s;const g=c.getContext('2d');let q=991;const r=()=>(q=q*16807%2147483647)/2147483647;
  for(let i=0;i<22;i++){const x=r()*s,y=r()*s,rad=70+r()*90;for(const ox of[-s,0,s])for(const oy of[-s,0,s]){const gx=x+ox,gy=y+oy;if(gx<-rad||gx>s+rad||gy<-rad||gy>s+rad)continue;
   const gr=g.createRadialGradient(gx,gy,0,gx,gy,rad);gr.addColorStop(0,'rgba(205,212,218,.42)');gr.addColorStop(1,'rgba(205,212,218,0)');g.fillStyle=gr;g.fillRect(gx-rad,gy-rad,rad*2,rad*2)}}return c}
@@ -779,10 +1028,10 @@ function mkFog(){const s=384,c=document.createElement('canvas');c.width=c.height
 function drawFog(k){if(!fogTile)fogTile=mkFog();
  const C=CFG.ev,ox=(S.t*12-cam.x*.5)%384,oy=(S.t*7-cam.y*.5)%384;
  ctx.globalAlpha=k*C.fogAlpha;const sx=Math.floor(ox)-384,sy=Math.floor(oy)-384;for(let y=sy;y<VH;y+=384)for(let x=sx;x<VW;x+=384)ctx.drawImage(fogTile,x,y);ctx.globalAlpha=1;
- const px=P.x-cam.x,py=P.y-cam.y,gr=ctx.createRadialGradient(px,py,C.fogClear,px,py,Math.max(VW,VH)*.62);
+ const cp=CAMP||P,px=cp.x-cam.x,py=cp.y-cam.y,gr=ctx.createRadialGradient(px,py,C.fogClear,px,py,Math.max(VW,VH)*.62);
  gr.addColorStop(0,'rgba(170,180,188,0)');gr.addColorStop(1,'rgba(170,180,188,'+(.7*k)+')');ctx.fillStyle=gr;ctx.fillRect(0,0,VW,VH)}
 // Panne électrique (espace écran) : ambiance sombre, zone claire autour du joueur
-function drawDark(k){const a=CFG.ev.types.blackout.alpha[MAPD.id]*k,px=P.x-cam.x,py=P.y-cam.y,gr=ctx.createRadialGradient(px,py,70,px,py,Math.max(VW,VH)*.52);
+function drawDark(k){const a=CFG.ev.types.blackout.alpha[MAPD.id]*k,cp=CAMP||P,px=cp.x-cam.x,py=cp.y-cam.y,gr=ctx.createRadialGradient(px,py,70,px,py,Math.max(VW,VH)*.52);
  gr.addColorStop(0,'rgba(6,10,24,'+a*.4+')');gr.addColorStop(.5,'rgba(4,7,20,'+a*.82+')');gr.addColorStop(1,'rgba(2,4,14,'+a+')');ctx.fillStyle=gr;ctx.fillRect(0,0,VW,VH)}
 // Un lampadaire / feu est-il allumé ? (s'éteignent progressivement avec la panne, certains clignotent ou résistent)
 function lightOn(l){const k=EV.dark;if(k<l.thr||l.mode==0)return true;if(l.mode==1)return false;return Math.sin(S.t*(11+l.ph*9)+l.ph*50)>.1}
@@ -811,7 +1060,8 @@ function arrow(wx,wy,col,ic){const sx=wx-cam.x,sy=wy-cam.y;if(sx>40&&sx<VW-40&&s
 /* ========== Rendu principal ========== */
 function draw(){
  const sh=opt.shake?S.shake:0;S.shake*=.9;S.df*=.93;
- cam.x=Math.round(clamp(P.x-VW/2,0,Math.max(0,W-VW)));cam.y=Math.round(clamp(P.y-VH/2,0,Math.max(0,H-VH)));
+ CAMP=ME.dead?(players.find(live)||ME):ME; // mort : on regarde un équipier
+ cam.x=Math.round(clamp(CAMP.x-VW/2,0,Math.max(0,W-VW)));cam.y=Math.round(clamp(CAMP.y-VH/2,0,Math.max(0,H-VH)));
  ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.fillStyle='#000';ctx.fillRect(0,0,VW,VH);
  const ox=-cam.x+(Math.random()-.5)*sh,oy=-cam.y+(Math.random()-.5)*sh;ctx.translate(ox,oy);
  const sw=Math.min(VW,W-cam.x),shh=Math.min(VH,H-cam.y);ctx.drawImage(map,cam.x,cam.y,sw,shh,cam.x,cam.y,sw,shh);
@@ -833,13 +1083,16 @@ function draw(){
   if(z.k=='t'||z.k=='b'){ctx.fillStyle='#300';ctx.fillRect(z.x-r,z.y-r-10,r*2,5);ctx.fillStyle='#e33';ctx.fillRect(z.x-r,z.y-r-10,r*2*z.hp/z.mhp,5)}}
  // silhouettes de l'esquive
  for(const f of AFI){ctx.globalAlpha=f.t/.22*.35;ctx.fillStyle='#8cf';ctx.beginPath();ctx.arc(f.x,f.y,P.r,0,7);ctx.fill()}ctx.globalAlpha=1;
- // Joueur (canon raccourci pour correspondre au départ réel des balles)
- ctx.save();ctx.translate(P.x,P.y);ctx.rotate(P.ang);if((P.inv>0||P.dod.inv>0)&&(T*30|0)%2)ctx.globalAlpha=.4;
- ctx.fillStyle='rgba(0,0,0,.3)';ctx.beginPath();ctx.arc(3,4,P.r,0,7);ctx.fill();
- ctx.fillStyle='#555';ctx.fillRect(6,-4,CFG.muzzle+3,8);ctx.fillStyle='#2a6ad0';ctx.beginPath();ctx.arc(0,0,P.r,0,7);ctx.fill();ctx.strokeStyle='#124';ctx.lineWidth=2;ctx.stroke();
- ctx.fillStyle='#e8c090';ctx.beginPath();ctx.arc(2,0,7,0,7);ctx.fill();
- if(P.fl>0){const m0=CFG.muzzle+3;ctx.fillStyle='#ffb';ctx.beginPath();ctx.moveTo(m0,0);ctx.lineTo(m0+16,-7);ctx.lineTo(m0+22,0);ctx.lineTo(m0+16,7);ctx.fill();ctx.globalCompositeOperation='lighter';ctx.fillStyle='rgba(255,180,60,.18)';ctx.beginPath();ctx.arc(m0+2,0,90,0,7);ctx.fill()}
- ctx.restore();
+ // Joueurs (canon raccourci pour correspondre au départ réel des balles)
+ for(const p of players){if(p.gone||p.dead||!vis(p.x,p.y,50))continue;
+  ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.ang);if((p.inv>0||p.dod.inv>0)&&(T*30|0)%2)ctx.globalAlpha=.4;
+  ctx.fillStyle='rgba(0,0,0,.3)';ctx.beginPath();ctx.arc(3,4,p.r,0,7);ctx.fill();
+  ctx.fillStyle='#555';ctx.fillRect(6,-4,CFG.muzzle+3,8);ctx.fillStyle=p.col;ctx.beginPath();ctx.arc(0,0,p.r,0,7);ctx.fill();ctx.strokeStyle='#124';ctx.lineWidth=2;ctx.stroke();
+  ctx.fillStyle='#e8c090';ctx.beginPath();ctx.arc(2,0,7,0,7);ctx.fill();
+  if(p.fl>0){const m0=CFG.muzzle+3;ctx.fillStyle='#ffb';ctx.beginPath();ctx.moveTo(m0,0);ctx.lineTo(m0+16,-7);ctx.lineTo(m0+22,0);ctx.lineTo(m0+16,7);ctx.fill();ctx.globalCompositeOperation='lighter';ctx.fillStyle='rgba(255,180,60,.18)';ctx.beginPath();ctx.arc(m0+2,0,90,0,7);ctx.fill()}
+  ctx.restore();
+  if(p!==ME){ctx.font='bold 12px sans-serif';ctx.textAlign='center';ctx.lineWidth=3;ctx.strokeStyle='rgba(0,0,0,.8)';ctx.strokeText(p.name,p.x,p.y-p.r-14);ctx.fillStyle=p.col;ctx.fillText(p.name,p.x,p.y-p.r-14);
+   ctx.fillStyle='#300';ctx.fillRect(p.x-16,p.y-p.r-10,32,4);ctx.fillStyle='#4d4';ctx.fillRect(p.x-16,p.y-p.r-10,32*clamp(p.hp/p.mhp,0,1),4)}}
  for(const p of PT)if(vis(p.x,p.y,5)){ctx.globalAlpha=Math.min(1,p.l*2);ctx.fillStyle=p.c;ctx.fillRect(p.x-p.s/2,p.y-p.s/2,p.s,p.s)}ctx.globalAlpha=1;
  for(const e of EX){const k=e.t/.6,r=e.r*Math.min(1,k*2.5);ctx.globalAlpha=1-k;
   ctx.fillStyle=e.big?'#f5a':'#fa2';ctx.beginPath();ctx.arc(e.x,e.y,r*.7,0,7);ctx.fill();ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(e.x,e.y,r*.35*(1-k),0,7);ctx.fill();
@@ -861,17 +1114,20 @@ function draw(){
   ctx.globalAlpha=1;ctx.textBaseline='alphabetic'}
  // Espace écran : repères hors champ, viseur
  ctx.setTransform(1,0,0,1,0,0);
- if(mode=='play'){if(GEN)arrow(GEN.x+GEN.w/2,GEN.y+GEN.h/2,'#fd5','⚡');if(EV.crate)arrow(EV.crate.x,EV.crate.y,'#4df','📦')}
+ if(mode=='play'||simOverlay()){if(GEN)arrow(GEN.x+GEN.w/2,GEN.y+GEN.h/2,'#fd5','⚡');if(EV.crate)arrow(EV.crate.x,EV.crate.y,'#4df','📦');for(const p of players)if(p!==ME&&live(p))arrow(p.x,p.y,p.col,p.name[0])}
  if(mode=='play'){ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.beginPath();ctx.arc(M.x,M.y,9,0,7);ctx.moveTo(M.x-16,M.y);ctx.lineTo(M.x-5,M.y);ctx.moveTo(M.x+5,M.y);ctx.lineTo(M.x+16,M.y);ctx.moveTo(M.x,M.y-16);ctx.lineTo(M.x,M.y-5);ctx.moveTo(M.x,M.y+5);ctx.lineTo(M.x,M.y+16);ctx.stroke();
   if(P.rel>0){ctx.strokeStyle='#fd5';ctx.beginPath();ctx.arc(M.x,M.y,14,-1.57,-1.57+6.283*(1-P.rel/(WP[P.wi].rel*P.relM)));ctx.stroke()}
   if(P.dod.cd>0){ctx.strokeStyle='#6cf';ctx.beginPath();ctx.arc(M.x,M.y,20,-1.57,-1.57+6.283*(1-P.dod.cd/CFG.dodge.cd));ctx.stroke()}}
  $('dmg').style.opacity=Math.min(1,S.df*.9+(mode!='menu'&&P.hp<P.mhp*.3?.25+.1*Math.sin(S.t*6):0))}
-function hudUpdate(){if(mode=='menu')return;const w=WP[P.wi],s=P.ws[P.wi],D=P.dod,bf=P.bf;
+const esc=t=>String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function hudUpdate(){if(mode=='menu'||mode=='mp')return;const w=WP[P.wi],s=P.ws[P.wi],D=P.dod,bf=P.bf;
  $('hpf').style.width=P.hp/P.mhp*100+'%';$('hpt').textContent=Math.ceil(P.hp)+' / '+P.mhp;$('xpf').style.width=P.xp/xpNeed()*100+'%';$('lv').textContent=P.lvl;
- $('wv').textContent=S.wave;$('zl').textContent=S.q.length+Z.length;$('mn').textContent=P.cash;$('tm').textContent=fmt(S.t);
+ $('wv').textContent=S.wave;$('zl').textContent=NET.role=='client'?S.left:S.q.length+Z.length;$('mn').textContent=P.cash;$('tm').textContent=fmt(S.t);
  $('wn').textContent=w.n+(s.lvl?' Niv.'+s.lvl:'');$('am').textContent=P.rel>0?'Rechargement…':s.mag+' / '+(P.wi?s.res:'∞');$('md').textContent=P.med;$('pt').textContent=P.parts;
  for(let i=0;i<5;i++){const e=$('s'+i);e.className='sl'+(P.ws[i].have?' own':'')+(i==P.wi?' act':'')}
- $('msg').textContent=S.prep>0&&S.wave>0?'Prochaine vague dans '+Math.ceil(S.prep)+'s — B : boutique'+(GEN?' / réparations':''):'';
+ $('msg').textContent=ME.dead?'☠️ À terre — retour à la fin de la vague (vous suivez un équipier)':S.prep>0&&S.wave>0?'Prochaine vague dans '+Math.ceil(S.prep)+'s — B : boutique'+(GEN?' / réparations':''):'';
+ const tm=players.length>1?players.filter(p=>!p.gone).map(p=>`<div style="color:${p.col}">${p===ME?'▶ ':''}${esc(p.name)} — ${p.dead?'☠️':Math.ceil(p.hp)+' PV'}</div>`).join('')+(NET.role=='client'?`<div style="font-size:11px;color:#9ab">📶 ${Math.round(NET.rtt*1000)} ms</div>`:''):'';
+ if(tm!==NET.tmc){NET.tmc=tm;$('team').innerHTML=tm;$('team').style.display=tm?'block':'none'}
  $('note').textContent=S.note&&S.note.t>0?S.note.s:'';
  const rdy=D.cd<=0;$('ddf').style.width=(rdy?100:(1-D.cd/CFG.dodge.cd)*100)+'%';$('ddt').textContent=rdy?'Esquive prête (Espace)':'Esquive… '+D.cd.toFixed(1)+'s';
  $('bfx').textContent=[bf.dmg>0?'🔫×'+CFG.ev.supply.dmg+' '+Math.ceil(bf.dmg)+'s':'',bf.rate>0?'⚡×'+CFG.ev.supply.rate+' '+Math.ceil(bf.rate)+'s':'',bf.spd>0?'👟×'+CFG.ev.supply.spd+' '+Math.ceil(bf.spd)+'s':''].filter(Boolean).join(' ');
@@ -885,11 +1141,13 @@ addEventListener('keydown',e=>{const k=e.key.toLowerCase();K[k]=1;if(k.startsWit
  else if(mode=='shop'&&(k=='b'||k=='escape'))closeShop();else if(mode=='pause'&&(k=='escape'||k=='p'))setMode('play');
  else if(mode=='up'&&k>='1'&&k<='3')pick(+k-1)});
 addEventListener('keyup',e=>K[e.key.toLowerCase()]=0);
-addEventListener('blur',()=>{for(const k in K)K[k]=0;M.d=0;if(mode=='play')setMode('pause')});
+addEventListener('blur',()=>{for(const k in K)K[k]=0;M.d=0;if(mode=='play'&&NET.role=='solo')setMode('pause')});
 addEventListener('mousemove',e=>{M.x=e.clientX;M.y=e.clientY});
 cv.addEventListener('mousedown',e=>{if(e.button==0)M.d=1});addEventListener('mouseup',()=>M.d=0);
 addEventListener('contextmenu',e=>e.preventDefault());
 addEventListener('wheel',e=>{if(mode!='play')return;const d=e.deltaY>0?1:-1;let i=P.wi;do i=(i+d+5)%5;while(!P.ws[i].have);sel(i)},{passive:true});
-let last=0;function loop(t){requestAnimationFrame(loop);const dt=Math.min(.05,(t-last)/1000||0);last=t;if(mode=='play')update(dt);draw();hudUpdate()}
-reset();requestAnimationFrame(loop);
+let last=0;function loop(t){requestAnimationFrame(loop);const dt=Math.min(.05,(t-last)/1000||0);last=t;frame(dt);draw();hudUpdate()}
+// Une image : solo/hôte = simulation complète ; client = déplacement local + interpolation ; puis réseau
+function frame(dt){if(NET.role=='client'){if(NET.started&&mode!='over')clientTick(dt)}else if(simOn())update(dt);netTick(dt)}
+initNetUI();reset();requestAnimationFrame(loop);
 </script></body></html>
